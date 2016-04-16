@@ -12,7 +12,7 @@
 ;;; Call initialization routines.  Register callback function to
 ;;; display graphics.  Enter main loop and process events.
 
-(in-package #:cl-glut-examples)
+(in-package :asteroids)
 
 (defvar *window* nil)
 
@@ -22,8 +22,36 @@
     (move-on ()
       :report "Move on, ignoring the error")))
 
-(defclass hello-window (glut:window)
-  ()
+(defclass game-object ()
+  ((x :accessor x-position
+      :initform 0
+      :initarg :x)
+   
+   (y :accessor y-position
+      :initform 0
+      :initarg :y)
+   
+   (angle :accessor angle
+          :initform 0)
+   
+   (angular-velocity :accessor angular-velocity
+                      :initform 0)
+   
+   (x-heading :accessor x-heading
+              :initform 0)
+
+   (y-heading :accessor y-heading
+              :initform 0)))
+
+
+(defgeneric draw-object (game-object))
+
+
+(defvar test-object (make-instance 'game-object))
+
+
+(defclass game-window (glut:window)
+  (asteroids spaceship)
   (:default-initargs :pos-x 100 :pos-y 100 :width 500 :height 500
                      :tick-interval 50
                      :mode '(:single :rgb) :title "Hiyoo!"))
@@ -43,7 +71,7 @@
          ,@body)))
 
 
-(defmethod glut:display-window :before ((w hello-window))
+(defmethod glut:display-window :before ((w game-window))
   ;; Select clearing color.
   (gl:clear-color 0 0 0 0)
   ;; Initialize viewing values.
@@ -69,8 +97,8 @@
 
 (defmacro polygon (vertices)
   `(gl:with-primitive :polygon
-         ,@(loop for vertex in vertices
-              collect `(gl:vertex ,@vertex))))
+     ,@(loop for vertex in vertices
+          collect `(gl:vertex ,@vertex))))
 
 
 (defmacro asteroid (&optional (n 5))
@@ -81,7 +109,7 @@
   (gl:rotate (* (/ 360 period) (mod elapsed period)) 0 0 1))
 
 
-(defmethod glut:display ((w hello-window))
+(defmethod glut:display ((w game-window))
   (with-option-to-move-on
     (gl:clear :color-buffer)
     (gl:color 0.3 0.4 1)
@@ -95,25 +123,18 @@
     (gl:flush)))
 
 
-(defmethod glut:tick ((w hello-window))
+(defmethod glut:tick ((w game-window))
 ;  (format t "elapsed ~A~%" (glut:get :elapsed-time))
   (glut:post-redisplay))
 
 
 (defun rb-hello ()
-  (let ((win (make-instance 'hello-window)))
+  (let ((win (make-instance 'game-window)))
     (setf *window* win)
     (setf (glut:title win) "Hello")
     (glut:display-window win)))
 
 
 (quote (gui-thread:with-body-in-gui-thread 
-    (rb-hello)))
+         (rb-hello)))
 
-
-;(quote (gui-thread:with-body-in-gui-thread 
-;         (glut:main-loop)))
-
-
-
-; (sb-thread:list-all-threads)

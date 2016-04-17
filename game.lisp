@@ -43,25 +43,93 @@
    (y-heading :accessor y-heading
               :initform 0)))
 
+(defun wrap-position (object &optional (w 0.5) (h 0.5))
+  
+  ;; Add 10% to the dimensions to make sure the whole object is outside the screen
+  (let ((w (* w 1.1)))
+    (with-slots (x) test-object
+      (if (< x (- w))
+          (setf x w))
+    
+      (if (> x w)
+          (setf x (- w)))))
+  
+  (let ((h (* h 1.1)))
+    (with-slots (y) test-object
+    
+      (if (< y (- h))
+          (setf y h))
+    
+      (if (> y h)
+          (setf y (- h))))))
+
+(defun integrate-object (object delta)
+  (with-slots (x y angle x-heading y-heading angular-velocity) test-object
+    
+    ;; Scale by passed amount of time!
+    (let ((hx (* x-heading delta))
+          (hy (* y-heading delta))
+          (av (* angular-velocity delta)))
+      
+      (incf x hx)
+      (incf y hy)
+      (incf angle av))))
+
 
 (defgeneric draw-object (game-object))
+(defgeneric update-object (game-object number))
+
 
 
 (defvar test-object (make-instance 'game-object))
 
 
-(defclass game-window (glut:window)
+
+(defmethod update-object ((object game-object) (delta number))
+  (integrate-object object delta)
+  (wrap-position object))
+
+
+(defmethod draw-object :around ((object game-object))
+  (with-slots (x y angle) test-object
+    (with-temporary-matrix
+      (gl:translate x y 0)
+      (gl:scale 0.1 0.1 1)            ; TODO let object determine its size?
+      (gl:rotate angle 0 0 1)
+      (call-next-method))))
+
+
+(defmethod draw-object ((object game-object))
+  (asteroid))
+
+
+
+(defclass game-window (glut:window integrator)
   (asteroids spaceship)
   (:default-initargs :pos-x 100 :pos-y 100 :width 500 :height 500
-                     :tick-interval 50
-                     :mode '(:single :rgb) :title "Hiyoo!"))
+                     :tick-interval 20
+                     :mode '(:single :rgb) :title "Asteroids"))
+
+
+(defmethod get-current-time ((window game-window))
+  (/ (glut:get :elapsed-time) 1000))
+
+
+(defmethod integrate ((window game-window))
+  (with-slots (asteroids spaceship) window
+    (let ((delta (compute-delta window)))
+      
+      (update-object test-object delta)
+      (quote (loop for asteroid in asteroids
+         do (update-object asteroid delta)))
+      (quote (update-object spaceship delta)))))
 
 
 (defmacro with-temporary-matrix (&body body)
-  `(unwind-protect 
-        (progn (gl:push-matrix)
-               ,@body)               
-     (gl:pop-matrix)))
+  `(progn (gl:push-matrix)
+          (unwind-protect 
+               (progn ,@body)               
+            (gl:pop-matrix))))
 
 
 (defmacro with-periodic-rotation (period &body body)
@@ -117,15 +185,15 @@
     (gl:matrix-mode :modelview)
     (with-temporary-matrix
       (gl:translate 0.5 0.5 0)
-      (with-periodic-rotation 10000
-        (gl:scale 0.5 0.5 1)
-        (asteroid)))
+      (draw-object test-object))
+    
     (gl:flush)))
 
 
-(defmethod glut:tick ((w game-window))
-;  (format t "elapsed ~A~%" (glut:get :elapsed-time))
-  (glut:post-redisplay))
+(defmethod glut:tick ((window game-window))
+  (with-option-to-move-on 
+    (integrate window)
+    (glut:post-redisplay)))
 
 
 (defun rb-hello ()
@@ -137,4 +205,8 @@
 
 (quote (gui-thread:with-body-in-gui-thread 
          (rb-hello)))
+
+(quote (gui-thread:with-body-in-gui-thread 
+         (glut:leave-main-loop)))
+
 

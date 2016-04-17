@@ -1,16 +1,3 @@
-;;;; -*- Mode: lisp; indent-tabs-mode: nil -*-
-;;; hello.lisp --- Lisp version of hello.c (Red Book examples)
-;;;
-;;; Original C version contains the following copyright notice:
-;;;   Copyright (c) 1993-1997, Silicon Graphics, Inc.
-;;;   ALL RIGHTS RESERVED
-
-;;; This is a simple, introductory OpenGL program.
-
-;;; Declare initial window size, position, and display mode (single
-;;; buffer and RGBA).  Open window with "hello" in its title bar.
-;;; Call initialization routines.  Register callback function to
-;;; display graphics.  Enter main loop and process events.
 
 (in-package :asteroids)
 
@@ -157,10 +144,16 @@
                      0))))
 
 
-(defun circle-vertices (&optional (n 5))
-  (loop for i upto n
-       collect (let ((rads (/ (* 2 pi i) n)))
-                 (list (cos rads) (sin rads) 0))))
+(let* ((max-count 15)
+       (cache (make-array max-count :initial-element nil)))
+  
+  (defun circle-vertices (&optional (n 5))
+    (assert (< n max-count))
+    (or (aref cache n)
+        (setf (aref cache n) 
+              (loop for i upto n
+                 collect (let ((rads (/ (* 2 pi i) n)))
+                           (list (cos rads) (sin rads) 0)))))))
 
 
 (defmacro polygon (vertices)

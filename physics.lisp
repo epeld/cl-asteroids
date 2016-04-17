@@ -16,8 +16,8 @@
 
 
 ;(setf (angular-velocity test-object) 10)
-;(setf (y-position test-object) 0)
-;(setf (y-heading test-object) 0.0)
+;(setf (y-position test-object) 0.2)
+;(setf (y-heading test-object) 0.2)
 
 
 (defun compute-delta (integrator &optional (time (get-current-time integrator)))

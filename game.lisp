@@ -30,11 +30,12 @@
    (y-heading :accessor y-heading
               :initform 0)))
 
+
 (defun wrap-position (object &optional (w 0.5) (h 0.5))
   
   ;; Add 10% to the dimensions to make sure the whole object is outside the screen
   (let ((w (* w 1.1)))
-    (with-slots (x) test-object
+    (with-slots (x) object
       (if (< x (- w))
           (setf x w))
     
@@ -42,7 +43,7 @@
           (setf x (- w)))))
   
   (let ((h (* h 1.1)))
-    (with-slots (y) test-object
+    (with-slots (y) object
     
       (if (< y (- h))
           (setf y h))
@@ -50,8 +51,9 @@
       (if (> y h)
           (setf y (- h))))))
 
+
 (defun integrate-object (object delta)
-  (with-slots (x y angle x-heading y-heading angular-velocity) test-object
+  (with-slots (x y angle x-heading y-heading angular-velocity) object
     
     ;; Scale by passed amount of time!
     (let ((hx (* x-heading delta))
@@ -78,7 +80,7 @@
 
 
 (defmethod draw-object :around ((object game-object))
-  (with-slots (x y angle) test-object
+  (with-slots (x y angle) object
     (with-temporary-matrix
       (gl:translate x y 0)
       (gl:scale 0.1 0.1 1)            ; TODO let object determine its size?
@@ -86,8 +88,15 @@
       (call-next-method))))
 
 
+;; TODO this needs some work..
+(defun spaceship-vertices ()
+  (let ((vs (circle-vertices 3)))
+    (cons (loop for coord in (car vs) collect (* 1.3 coord)) (cdr vs))))
+
+
 (defmethod draw-object ((object game-object))
-  (asteroid))
+  (gl:color 0.8 0.2 0.1)
+  (polygon (spaceship-vertices)))
 
 
 
@@ -106,9 +115,9 @@
   (with-slots (asteroids spaceship) window
     (let ((delta (compute-delta window)))
       
+      (loop for asteroid in *asteroids*
+         do (update-object asteroid delta))
       (update-object test-object delta)
-      (quote (loop for asteroid in asteroids
-         do (update-object asteroid delta)))
       (quote (update-object spaceship delta)))))
 
 
@@ -156,14 +165,10 @@
                            (list (cos rads) (sin rads) 0)))))))
 
 
-(defmacro polygon (vertices)
-  `(gl:with-primitive :polygon
-     ,@(loop for vertex in vertices
-          collect `(gl:vertex ,@vertex))))
-
-
-(defmacro asteroid (&optional (n 5))
-  `(polygon ,(asteroid-vertices n)))
+(defun polygon (vertices)
+  (gl:with-primitive :polygon
+    (loop for vertex in vertices
+       do (apply #'gl:vertex vertex))))
 
 
 (defun rotation (elapsed period)
@@ -178,6 +183,8 @@
     (gl:matrix-mode :modelview)
     (with-temporary-matrix
       (gl:translate 0.5 0.5 0)
+      (loop for a in *asteroids*
+           do (draw-object a))
       (draw-object test-object))
     
     (gl:flush)))

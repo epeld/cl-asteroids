@@ -24,7 +24,8 @@
     (multiple-value-bind (hx hy) (unit-circle)
       
       (setf (x-heading object) (* speed hx))
-      (setf (y-heading object) (* speed hy))))
+      (setf (y-heading object) (* speed hy))
+      (setf (angular-velocity object) (random-between -30 30))))
   object)
 
 
@@ -44,3 +45,15 @@
     
     (randomize-position object)
     (randomize-heading object)))
+
+
+(defun random-color (seed)
+  (loop for i upto 3
+       collect (/ seed 255)))
+
+
+(defmethod draw-object ((object asteroid))
+  (apply #'gl:color (random-color (seed object)))
+  (polygon (circle-vertices (vertices object))))
+
+(defvar *asteroids* (loop for i upto 5 collect (random-asteroid)))

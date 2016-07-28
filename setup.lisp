@@ -2,12 +2,12 @@
 ; (ql:system-apropos "cl-glut-examples") 
 
 
+;(load "~/Downloads/quicklisp.lisp")
+;(quicklisp-quickstart:install)
 
 (ql:quickload :trivial-main-thread)
 (ql:quickload :cl-glut)
 
-; (compile-file "package.lisp")
+(quickproject:make-project #p"~/Documents/Code/cl-game/" :depends-on '(simple-tasks trivial-main-thread cl-opengl))
 
-;(sb-thread:list-all-threads)
-
-;(sb-thread:interrupt-thread)
+(ql:quickload "quickproject")

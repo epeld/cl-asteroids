@@ -3,6 +3,12 @@
 
 (defvar *window* nil)
 
+(defmacro with-temporary-matrix (&body body)
+  `(progn (gl:push-matrix)
+          (unwind-protect 
+               (progn ,@body)               
+            (gl:pop-matrix))))
+
 (defmacro with-option-to-move-on (&body forms)
   `(restart-case 
       (progn ,@forms)
@@ -99,7 +105,6 @@
   (polygon (spaceship-vertices)))
 
 
-
 (defclass game-window (glut:window integrator)
   (asteroids spaceship)
   (:default-initargs :pos-x 100 :pos-y 100 :width 500 :height 500
@@ -120,12 +125,6 @@
       (update-object test-object delta)
       (quote (update-object spaceship delta)))))
 
-
-(defmacro with-temporary-matrix (&body body)
-  `(progn (gl:push-matrix)
-          (unwind-protect 
-               (progn ,@body)               
-            (gl:pop-matrix))))
 
 
 (defmacro with-periodic-rotation (period &body body)
@@ -175,6 +174,33 @@
   (gl:rotate (* (/ 360 period) (mod elapsed period)) 0 0 1))
 
 
+(defun thrust (object)
+  
+  (with-slots (angle x-heading y-heading) object
+    (setf x-heading (* 0.2 (cos angle)))
+    (setf y-heading (* -0.2 (sin angle)))))
+
+
+(defun stop-moving (object)
+  (setf (y-heading object) 0)
+  (setf (x-heading object) 0))
+
+(stop-moving test-object)
+(setf (y-heading test-object) 0.05)
+(float (mod (angle test-object) 360))
+
+(defmethod glut:keyboard ((w game-window) key x y)
+  (case key 
+    (#\a (setf (angular-velocity test-object) 90))
+    (#\d (setf (angular-velocity test-object) -90))
+    (#\w (thrust test-object))))
+
+
+(defmethod glut:keyboard-up ((w game-window) key x y)
+  (case key 
+    (#\a (setf (angular-velocity test-object) 0))
+    (#\d (setf (angular-velocity test-object) 0))))
+
 (defmethod glut:display ((w game-window))
   (with-option-to-move-on
     (gl:clear :color-buffer)
@@ -196,7 +222,7 @@
     (glut:post-redisplay)))
 
 
-(defun rb-hello ()
+(defun run-game ()
   (let ((win (make-instance 'game-window)))
     (setf *window* win)
     (setf (glut:title win) "Hello")
@@ -204,7 +230,7 @@
 
 
 (quote (gui-thread:with-body-in-gui-thread 
-         (rb-hello)))
+         (run-game)))
 
 (quote (gui-thread:with-body-in-gui-thread 
          (glut:leave-main-loop)))

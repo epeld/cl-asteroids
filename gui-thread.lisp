@@ -1,9 +1,9 @@
 (in-package :gui-thread)
 
 
-(defclass gui-task (blocking-call-task) ())
+(defclass gui-task (simple-tasks:blocking-call-task) ())
 
-
+;(unuse-package :simple-tasks)
 (defmethod run-task ((task gui-task))
   (handler-bind ((condition (lambda (c) (invoke-debugger c))))
     (call-next-method)))

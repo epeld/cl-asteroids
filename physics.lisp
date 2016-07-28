@@ -15,9 +15,9 @@
   (setf (last-update int) (get-current-time int)))
 
 
-(setf (angular-velocity test-object) 30)
-(setf (x-heading test-object) 0.1)
-(setf (y-heading test-object) 0.2)
+;(setf (angular-velocity test-object) 0)
+;(setf (x-heading test-object) 0)
+;(setf (y-heading test-object) 0)
 
 
 (defun compute-delta (integrator &optional (time (get-current-time integrator)))

@@ -1,8 +1,6 @@
 
 (in-package :asteroids)
 
-(defvar *window* nil)
-
 (defmacro with-temporary-matrix (&body body)
   `(progn (gl:push-matrix)
           (unwind-protect 
@@ -222,11 +220,12 @@
     (glut:post-redisplay)))
 
 
-(defun run-game ()
-  (let ((win (make-instance 'game-window)))
-    (setf *window* win)
-    (setf (glut:title win) "Hello")
-    (glut:display-window win)))
+
+(defun run-game (&optional (win (create-window)))
+  "Run the game in the indicated window"
+  (setf *window* win)
+  (glut:display-window win))
+
 
 
 (quote (gui-thread:with-body-in-gui-thread 

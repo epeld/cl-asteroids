@@ -7,3 +7,8 @@
 
 (defpackage :asteroids
   (:use :gui-thread :common-lisp))
+
+
+(defpackage :peldan.window
+  (:use :cl)
+  (:nicknames :window))

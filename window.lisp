@@ -24,7 +24,10 @@
 
   ;; Poll for new scene to draw
   (when (next-scene w)
+
+    ;; Draw and forget.
     (scene:render (next-scene w))
+    (setf (next-scene w) nil)
     (glut:swap-buffers)))
 
 ;;

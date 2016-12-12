@@ -1,5 +1,9 @@
 ;;;; cl-game.asd
 
+(quicklisp:quickload :trivial-main-thread)
+(quicklisp:quickload :simple-tasks)
+(quicklisp:quickload :cl-glut)
+
 (asdf:defsystem #:cl-game
   :description "Describe cl-game here"
   :author "Erik Peldan <erik.peldan+lisp@gmail.com>"
@@ -11,5 +15,8 @@
   :components ((:file "package")
 	       (:file "physics")
 	       (:file "game")
-	       (:file "asteroid")))
+	       (:file "asteroid")
+               (:file "window")))
 
+
+(asdf:load-system :cl-game)

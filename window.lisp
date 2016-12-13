@@ -1,5 +1,5 @@
 
-(in-package :peldan.window)
+(in-package :window)
 
 (defclass base-window (glut:window)
   ((event-sink :type function
@@ -32,6 +32,9 @@
 
 ;;
 ;; Messages
+
+(defun process-command (window command)
+  :todo)
 
 (defun make-message (type payload)
   (the keyword type)

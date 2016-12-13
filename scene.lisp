@@ -2,10 +2,9 @@
 (in-package :scene)
 
 
-(defun scene-objects (scene)
-  "Get the objects within a scene"
-  (getf scene :items))
-
+;;
+;;  Scene Objects
+;; 
 
 (defun object-position (object)
   "Return an object's position"
@@ -34,6 +33,15 @@
 
     ;; TODO parameterize based on object type?
     (glut:wire-cube 0.5)))
+
+
+;;
+;; Scene
+;;
+
+(defun scene-objects (scene)
+  "Get the objects within a scene"
+  (getf scene :items))
 
 
 (defun render (scene)

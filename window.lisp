@@ -24,11 +24,14 @@
 
   ;; Poll for new scene to draw
   (when (next-scene w)
+    (unwind-protect
+         
+         ;; Draw
+         (progn (scene:render (next-scene w))
+                (glut:swap-buffers))
 
-    ;; Draw and forget.
-    (scene:render (next-scene w))
-    (setf (next-scene w) nil)
-    (glut:swap-buffers)))
+      ;; Always clear the scene, so as to not get stuck
+      (setf (next-scene w) nil))))
 
 ;;
 ;; Messages

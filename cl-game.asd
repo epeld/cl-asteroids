@@ -1,7 +1,5 @@
 ;;;; cl-game.asd
 
-(quicklisp:quickload :trivial-main-thread)
-(quicklisp:quickload :simple-tasks)
 (quicklisp:quickload :cl-glut)
 
 (asdf:defsystem #:cl-game
@@ -13,9 +11,7 @@
                #:cl-glut)
   :serial t
   :components ((:file "package")
-	       (:file "physics")
-	       (:file "game")
-	       (:file "asteroid")
+               (:file "scene")
                (:file "window")))
 
 

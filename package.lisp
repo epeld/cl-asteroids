@@ -1,14 +1,9 @@
 
-; shadow? schedule-task etc
-(defpackage :gui-thread
-  (:use :trivial-main-thread :common-lisp)
-  (:export :with-body-in-gui-thread :call-in-gui-thread))
-
-
-(defpackage :asteroids
-  (:use :gui-thread :common-lisp))
-
-
-(defpackage :peldan.window
+(defpackage :foobar.window
   (:use :cl)
   (:nicknames :window))
+
+(defpackage :foobar.scene
+  (:use :cl)
+  (:export :render)
+  (:nicknames :scene))

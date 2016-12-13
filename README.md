@@ -1,7 +1,16 @@
-# Asteroids!
+# Hello
   
-  This is a test to see how common lisp can be used to aid development by allowing for interactively changing a running program's implementation.
+  This was originally an attempt to re-create asteroids in Common Lisp and GLUT.
+  
+  That might still be the end result but instead the current goal is to create a bunch of more or less reusable "game development micro services".
+  The idea is to use ZeroMQ to do the communication.
 
-  If an error is encountered, the debugger should allow you to fix the error and continue without having to restart the app.
+  The first one up is Foobar the rendering service.
 
-  This interactivity also allows for fast experimentation e.g with colors and different graphics primitives.
+## Foobar
+   Foobar is a GLUT Frame functioning as a 3D Rendering Service.
+
+   It will publish input events. It will accept scene descriptions asynchroneously
+
+### Scene Descriptions
+    Basically a list of objects, their positions, rotations etc to be rendered.

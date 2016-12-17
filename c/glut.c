@@ -1,7 +1,10 @@
 
 #include <glut.h>
+#include <GL/freeglut.h>
 
+#include "ui.h"
 #include "events.h"
+
 
 
 void reshape(GLint width, GLint height) {
@@ -32,17 +35,17 @@ void keyboard(unsigned char key, int x, int y) {
 }
 
 
-void mouseButton(int button, int state, int x, int y) {
-  if (button == GLUT_LEFT_BUTTON) {
-    // TODO
-  }
-}
+/* void mouseButton(int button, int state, int x, int y) { */
+/*   if (button == GLUT_LEFT_BUTTON) { */
+/*     // TODO */
+/*   } */
+/* } */
 
-void mouseMotion(int x, int y) {
-  // TODO
-}
+/* void mouseMotion(int x, int y) { */
+/*   // TODO */
+/* } */
 
-void glutMain(int argc, char* argv[]) {
+int foo_ui_init(int argc, char* argv[]) {
   glutInit (&argc, argv);
   glutInitWindowSize (640, 480);
   glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
@@ -51,14 +54,20 @@ void glutMain(int argc, char* argv[]) {
   // Register callbacks:
   glutDisplayFunc (display);
   glutReshapeFunc (reshape);
-  glutKeyboardFunc (Keyboard);
-  glutMouseFunc (mouseButton);
-  glutMotionFunc (mouseMotion);
-  
-  /* // Create our popup menu */
-  /* BuildPopupMenu (); */
-  /* glutAttachMenu (GLUT_RIGHT_BUTTON); */
+  glutKeyboardFunc (keyboard);
+  /* glutMouseFunc (mouseButton); */
+  /* glutMotionFunc (mouseMotion); */
 
-  glutMainLoop ();
+  // Question: What happens when WE are in control of main loop, as opposed to GLUT?
+  glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+  
   return 0;
+}
+
+void foo_ui_uninit() {
+  // TODO
+}
+
+int foo_ui_step() {
+  glutMainLoopEvent();
 }

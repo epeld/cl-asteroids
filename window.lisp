@@ -85,7 +85,8 @@
 (defun event-loop (&key
                      (title (symbol-name (gensym "Foobar")))
                      (event-callback #'log-event)
-                     (tick-callback #'log-tick))
+                     (tick-callback #'log-tick)
+                     (tick-interval 1000))
   "Display a window, and run the event loop"
   (the function event-callback)
   

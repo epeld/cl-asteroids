@@ -42,6 +42,7 @@
 ;; 
 ;; Event Callbacks
 
+;; TODO define event classes
 (defmethod glut:keyboard ((w base-window) key x y)
   (report-event w (make-event :keydown key x y)))
 
@@ -68,6 +69,7 @@
 (defun event-loop (&key
                      (title (symbol-name (gensym "Foobar")))
                      (event-callback #'log-event)
+                     (renderer (constantly nil))
                      (tick-interval 1000))
   "Display a window, and run the event loop"
   (the function event-callback)
@@ -79,6 +81,7 @@
                                :tick-interval tick-interval)))
     
     (setf (event-fn window) event-callback)
+    (setf (render-fn window) renderer)
    
     ;; This will block the current thread until window is closed:
     (glut:display-window window)

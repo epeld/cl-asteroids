@@ -13,6 +13,7 @@
              :documentation "The ship's rotation"))
   (:documentation "The entity representing the player's ship"))
 
+
 (defclass asteroids-game ()
   ((ship :type ship
          :accessor asteroids-ship
@@ -20,7 +21,18 @@
          :documentation "The ship belonging to the player"))
   (:documentation "A game of asteroids"))
 
+(defun new-game ()
+  "Create a new game"
+  (make-instance 'asteroids-game
+                 :ship (make-instance 'ship)))
 
+(defun notify-event (game event)
+  "Notify the game that an input event happened")
+
+
+;;
+;;  Rendering
+;; 
 (defun render-ship (ship)
   "Render a ship"
   (destructuring-bind (x y) (ship-position ship)
@@ -49,8 +61,3 @@
   "Enter a game loop running the specified game"
   (window:event-loop :title "Asteroids"))
 
-
-(defun new-game ()
-  "Create a new game"
-  (make-instance 'asteroids-game
-                 :ship (make-instance 'ship)))

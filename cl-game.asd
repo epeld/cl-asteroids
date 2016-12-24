@@ -1,6 +1,7 @@
 ;;;; cl-game.asd
 
 (quicklisp:quickload :cl-glut)
+(quicklisp:quickload :cl-glu)
 
 (asdf:defsystem #:cl-game
   :description "Describe cl-game here"
@@ -8,7 +9,8 @@
   :license "None"
   :depends-on (#:simple-tasks
                #:trivial-main-thread
-               #:cl-glut)
+               #:cl-glut
+               #:cl-glu)
   :serial t
   :components ((:file "package")
                (:file "scene")

@@ -13,8 +13,8 @@
                #:cl-glu)
   :serial t
   :components ((:file "package")
-               (:file "scene")
-               (:file "window")))
+               (:file "window")
+               (:file "asteroid")))
 
 
 (asdf:load-system :cl-game)

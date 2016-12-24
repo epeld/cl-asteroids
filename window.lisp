@@ -2,14 +2,15 @@
 (in-package :window)
 
 (defclass base-window (glut:window)
-  ((event-sink :type function
+  ((event-callback :type function
                :accessor event-fn
                :documentation "Callback, accepting input events")
-   (message-source :type function
-                   :accessor message-fn
-                   :documentation "Zero-arg polling function for getting commands (messages)")
+   (tick-callback :type function
+                   :accessor tick-fn
+                   :documentation "Callback, for when a 'tick' has happened")
    (scene :accessor next-scene
-          :documentation "A reference to the next scene to render, if any."))
+          :documentation "A reference to the next scene to render, if any."
+          :initform nil))
   (:documentation "Just a base class so we can do some initialization"))
 
 
@@ -30,43 +31,14 @@
          (progn (scene:render (next-scene w))
                 (glut:swap-buffers))
 
-      ;; Always clear the scene, so as to not get stuck
+      ;; Always clear the scene
       (setf (next-scene w) nil))))
-
-;;
-;; Messages
-
-(defun process-command (window command)
-  :todo)
-
-(defun make-message (type payload)
-  (the keyword type)
-  (list type payload))
-
-(defun message-type (message)
-  (the keyword (first message)))
-
-(defun message-payload (message)
-  (second message))
-
-(defun process-messages (w)
-  "Process window commands and find the latest scene"
-  (do (scene
-       (msg (funcall (message-fn w)) (funcall (message-fn w))))
-      ((null msg)
-       (when scene
-         (setf (next-scene w) scene)
-         (glut:post-redisplay)))
-
-    (case (message-type msg)
-      (:scene (setf scene (message-payload msg)))
-      (:command (process-command w (message-payload msg))))))
 
 ;;
 ;; Event Processing
 
 (defmethod glut:tick ((w base-window))
-  (process-messages w))
+  (funcall (tick-fn w) w))
 
 (declaim (inline report-event))
 
@@ -88,7 +60,7 @@
 
 
 (defmethod glut:special ((w base-window) special x y)
-  (report-event w (make-event :keydown special x y)))
+  (report-event w (make-event :keydown special x y :special)))
 
 
 (defmethod glut:keyboard-up ((w base-window) key x y)
@@ -96,25 +68,37 @@
 
 
 (defmethod glut:special-up ((w base-window) special x y)
-  (report-event w (make-event :keyup special x y)))
+  (report-event w (make-event :keyup special x y :special)))
 
 ;;
 ;; Event Loop
 ;;
 
-(defun event-loop (event-sink scene-source &optional (title "Foobar"))
-  "Display a window, and run the event loop"
-  (the function event-sink)
-  (the function scene-source)
-  
-  (funcall event-sink (make-event :enter-event-loop title))
-  
-  (let ((window (make-instance 'base-window)))
-    (setf (glut:title window) title)
-    (setf (event-fn window) event-sink)
-    (setf (scene-fn window) scene-source)
+(defun log-event (event)
+  "Log an input event to stdout"
+  (format t "~s~%" event))
 
-    ;; This will block the current thread until window is closed:
-    (glut:display-window window))
+(defun log-tick (window)
+  "Report a window tick"
+  (format t "Tick! (~a)~%" (glut:title window)))
+
+(defun event-loop (&key
+                     (title (symbol-name (gensym "Foobar")))
+                     (event-callback #'log-event)
+                     (tick-callback #'log-tick))
+  "Display a window, and run the event loop"
+  (the function event-callback)
   
-  (funcall event-sink (make-event :exit-event-loop title)))
+  (funcall event-callback (make-event :enter-event-loop title))
+  
+  (let ((window (make-instance 'base-window
+                               :tick-interval tick-interval)))
+    (setf (glut:title window) title)
+    (setf (event-fn window) event-callback)
+    (setf (tick-fn window) tick-callback)
+   
+    ;; This will block the current thread until window is closed:
+    (glut:display-window window)
+    (glut:disable-tick window))
+
+  (funcall event-callback (make-event :exit-event-loop title)))

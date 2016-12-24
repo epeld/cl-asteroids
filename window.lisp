@@ -5,12 +5,9 @@
   ((event-callback :type function
                :accessor event-fn
                :documentation "Callback, accepting input events")
-   (tick-callback :type function
-                   :accessor tick-fn
-                   :documentation "Callback, for when a 'tick' has happened")
-   (scene :accessor next-scene
-          :documentation "A reference to the next scene to render, if any."
-          :initform nil))
+   (renderer :accessor render-fn
+             :documentation "The function that is to be used for rendering"
+             :initform (constantly nil)))
   (:documentation "Just a base class so we can do some initialization"))
 
 
@@ -20,37 +17,27 @@
 (defmethod glut:display-window :before ((w base-window))
   (gl:clear-color 0 0.5 0.2 0))
 
-(defmethod glut:display ((w base-window))
-  (gl:clear :color-buffer)
-
-  ;; Poll for new scene to draw
-  (when (next-scene w)
-    (unwind-protect
-         
-         ;; Draw
-         (progn (scene:render (next-scene w))
-                (glut:swap-buffers))
-
-      ;; Always clear the scene
-      (setf (next-scene w) nil))))
+(defmethod glut:display ((window base-window))
+  (funcall (render-fn window)))
 
 ;;
 ;; Event Processing
 
-(defmethod glut:tick ((w base-window))
-  (funcall (tick-fn w) w))
-
 (declaim (inline report-event))
-
 (defun report-event (window event)
   "Report an event"
-  (funcall (event-fn window) event))
-
+  (when (funcall (event-fn window) event)
+    (glut:post-redisplay)))
 
 (defun make-event (&rest args)
   "Construct an input event"
   (the keyword (first args))
   args)
+
+(defmethod glut:tick ((window base-window))
+  (report-event window (make-event :tick)))
+
+
 
 ;; 
 ;; Event Callbacks
@@ -78,14 +65,9 @@
   "Log an input event to stdout"
   (format t "~s~%" event))
 
-(defun log-tick (window)
-  "Report a window tick"
-  (format t "Tick! (~a)~%" (glut:title window)))
-
 (defun event-loop (&key
                      (title (symbol-name (gensym "Foobar")))
                      (event-callback #'log-event)
-                     (tick-callback #'log-tick)
                      (tick-interval 1000))
   "Display a window, and run the event loop"
   (the function event-callback)
@@ -93,10 +75,10 @@
   (funcall event-callback (make-event :enter-event-loop title))
   
   (let ((window (make-instance 'base-window
+                               :title title
                                :tick-interval tick-interval)))
-    (setf (glut:title window) title)
+    
     (setf (event-fn window) event-callback)
-    (setf (tick-fn window) tick-callback)
    
     ;; This will block the current thread until window is closed:
     (glut:display-window window)

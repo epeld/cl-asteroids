@@ -73,6 +73,12 @@
                      (tick-interval 1000))
   "Display a window, and run the event loop"
   (the function event-callback)
+
+  ;; TODO use trivial-main-thread to always call this
+  ;; from the main thread.
+
+  ;; TODO wrap callback funcalls in error handler
+  ;; to avoid aborting main thread
   
   (funcall event-callback (make-event :enter-event-loop title))
   

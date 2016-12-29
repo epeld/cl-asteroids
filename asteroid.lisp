@@ -73,25 +73,42 @@
           (y (cadr position)))
 
       (gl:push-matrix)
+      (unwind-protect
+           (progn
+             ;; Setup
+             (gl:color 1.0 1.0 1.0)
+             (gl:translate x y 0)
+             (gl:scale 0.5 0.5 0)
+             (gl:rotate rotation 0 0 -1)
+
+             ;; Draw
+             (gl:begin :line-loop)
+             (gl:vertex 1 0)
+             (gl:vertex (cos (* 2 (/ pi 3))) (sin (* 2 (/ pi 3))))
+             (gl:vertex (cos (* -2 (/ pi 3))) (sin (* -2 (/ pi 3))))
+             (gl:end)
+
+             (gl:begin :points)
+             (gl:vertex 0 0)
+             (gl:end)
+
+             ;;
+             ;; For debugging:
+             ;;
+             #|
+
       
-      ;; Setup
-      (gl:color 1.0 1.0 1.0)
-      (gl:translate x y 0)
-      (gl:scale 0.5 0.5 0)
-      (gl:rotate rotation 0 0 -1)
+             (gl:begin :line-loop)
+             (loop for i upto 20
+             do
+             (let ((rad (/ (* 2 pi i)
+             20)))
+             (gl:vertex (cos rad) (sin rad))))
+             (gl:end)
+             |#
 
-      ;; Draw
-      (gl:begin :line-loop)
-      (gl:vertex 0 -1)
-      (gl:vertex (/ 1 (sqrt 2)) (/ 1 (sqrt 2)))
-      (gl:vertex (- (/ 1 (sqrt 2))) (/ 1 (sqrt 2)))
-      (gl:end)
-
-      (gl:begin :points)
-      (gl:vertex 0 0)
-      (gl:end)
-
-      (gl:pop-matrix))))
+             )
+        (gl:pop-matrix)))))
 
 
 (defun render-game (game)

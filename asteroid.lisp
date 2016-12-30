@@ -132,8 +132,8 @@
          :documentation "The ship belonging to the player")
    
    (player :type player
-                 :accessor game-player
-                 :initform (make-instance 'player))
+           :accessor game-player
+           :initform (make-instance 'player))
 
    (projectile :type projectile
                :accessor asteroids-projectile

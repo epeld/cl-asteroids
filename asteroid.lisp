@@ -97,7 +97,11 @@
              :accessor object-rotation
              :initarg :rotation
              :initform 0
-             :documentation "The ship's rotation")
+             :documentation "The object's rotation")
+   (heading :type list
+            :accessor object-heading
+            :initform (vector-zero)
+            :documentation "The object's heading")
    (lifetime :type number
              :accessor object-lifetime
              :initform 0.5

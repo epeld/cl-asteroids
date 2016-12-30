@@ -71,23 +71,8 @@
 (defparameter *ship-thrust-acceleration*
   1.0)
 
-(defclass ship ()
-  ((position :type list
-             :accessor object-position
-             :initform (vector-zero)
-             :documentation "The ship's position")
-   (rotation :type number
-             :accessor object-rotation
-             :initform 0
-             :documentation "The ship's rotation")
-   (heading :type list
-            :accessor object-heading
-            :initform (vector-zero)
-            :documentation "The ship's heading"))
-  (:documentation "The entity representing the player's ship"))
 
-
-(defclass projectile ()
+(defclass physical-object ()
   ((position :type list
              :accessor object-position
              :initform (vector-zero)
@@ -95,37 +80,34 @@
              :documentation "The object's position")
    (rotation :type number
              :accessor object-rotation
-             :initarg :rotation
              :initform 0
+             :initarg :rotation
              :documentation "The object's rotation")
    (heading :type list
             :accessor object-heading
             :initform (vector-zero)
             :initarg :heading
-            :documentation "The object's heading")
-   (lifetime :type number
+            :documentation "The object's heading"))
+  (:documentation "Represents something in the game with physical properties"))
+
+
+(defclass ship (physical-object)
+  ()
+  (:documentation "The entity representing the player's ship"))
+
+
+(defclass rock (physical-object)
+  ()
+  (:documentation "The rocks that we want to shoot at"))
+
+
+(defclass projectile (physical-object)
+  ((lifetime :type number
              :accessor object-lifetime
              :initform 0.5
              :initarg :lifetime
              :documentation "The object's lifetime, in time units"))
   (:documentation "The projectile that the ship can fire"))
-
-
-(defclass rock ()
-  ((position :type list
-             :accessor rock-position
-             :initform (vector-zero)
-             :documentation "The rock's position")
-   (rotation :type number
-             :accessor rock-rotation
-             :initform 0
-             :documentation "The rock's rotation")
-   (heading :type list
-            :accessor rock-heading
-            :initform (vector-zero)
-            :documentation "The rock's heading"))
-  (:documentation "The rocks that we want to shoot at"))
-
 
 (defclass player ()
   ((turning :type keyword
@@ -434,3 +416,4 @@
 ;; TODO move event processing into asteroid-events.lisp
 
 (quote (game-loop))
+(quote (ql:quickload :cl-game))

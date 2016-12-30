@@ -10,3 +10,5 @@ For now, just running `(ql:quickload :cl-game)` should be enough to get going.
 2) Support firing shots with ship
 3) Add visual effect (= "exhaust") when thrusting
 4) Add some rocks
+5) Apply 'warping' - forcing ship to stay within screen bounds
+6) Figure out units of length

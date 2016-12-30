@@ -154,7 +154,13 @@
    (projectile :type projectile
                :accessor asteroids-projectile
                :initform nil
-               :documentation "The one live projectile instance"))
+               :documentation "The one live projectile instance")
+
+   (rocks :type list
+          :accessor asteroids-rocks
+          :initform nil
+          :documentation "The list of rocks"))
+  
   (:documentation "A game of asteroids"))
 
 
@@ -343,7 +349,7 @@
 
 (defun update-game (game tstep)
   "Step the game forward `tstep` units of time"
-  (with-slots (ship projectile player) game
+  (with-slots (ship projectile player rocks) game
 
     ;;
     ;; Ship
@@ -373,7 +379,19 @@
       (when (zerop (setf (object-lifetime projectile)
                          (max 0 (- (object-lifetime projectile)
                                    tstep))))
-        (setf projectile nil)))))
+        (setf projectile nil)))
+
+    ;;
+    ;; Rocks
+    ;;
+    (loop for rock in rocks
+       do
+         (update-position rock tstep)
+       when
+         (and projectile
+              (check-collision projectile rock))
+       collect
+         rock)))
 
 ;;
 ;;  Top Level API

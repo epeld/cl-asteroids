@@ -133,14 +133,12 @@
     (with-slots (turning) (game-player game)
       (case turning
         (:left
-         (setf (ship-rotation ship)
-               (- (ship-rotation ship)
-                  (* 2 tstep pi))))
+         (decf (ship-rotation ship)
+               (* tstep 360)))
 
         (:right
-         (setf (ship-rotation ship)
-               (+ (ship-rotation ship)
-                  (* 2 tstep pi))))))
+         (incf (ship-rotation ship)
+               (* tstep 360)))))
 
     ;; TODO move the ship forward here
     (with-slots (thrusting) (game-player game)
@@ -155,9 +153,9 @@
                      :event-callback (lambda (event)
                                        (notify-event game event))
                      :renderer (lambda ()
-                                 (update-game game 0.3)
+                                 (update-game game 0.020)
                                  (render-game game))
-                     :tick-interval 300))
+                     :tick-interval 20))
 
 
 ;; TODO move rendering into asteroid-rendering.lisp

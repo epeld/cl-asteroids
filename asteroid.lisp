@@ -66,43 +66,43 @@
 ;;
 ;;  Rendering
 ;;
-(declaim (inline gl-render-ship))
+
+;(declaim (inline gl-render-ship))
 (defun gl-render-ship (x y rotation)
   "Perform the GL operations to render a ship"
   
   ;; Setup
   (gl:color 1.0 1.0 1.0)
   (gl:translate x y 0)
-  (gl:scale 0.5 0.5 0)
+  (gl:scale 0.05 0.05 0)
   (gl:rotate rotation 0 0 -1)
 
   ;; Draw
   (gl:begin :line-loop)
   (gl:vertex 1 0)
-  (gl:vertex (cos (* 2 (/ pi 3))) (sin (* 2 (/ pi 3))))
-  (gl:vertex (cos (* -2 (/ pi 3))) (sin (* -2 (/ pi 3))))
+  (gl:vertex (cos (* 5 (/ pi 6))) (sin (* 5 (/ pi 6))))
+  (gl:vertex (cos (* -5 (/ pi 6))) (sin (* -5 (/ pi 6))))
   (gl:end)
 
-  (gl:begin :points)
-  (gl:vertex 0 0)
-  (gl:end)
+  ;; Draw a central dot
+  (when nil
+    (gl:begin :points)
+    (gl:vertex 0 0)
+    (gl:end))
 
   ;;
   ;; For debugging:
   ;;
-  #|
 
-      
-  (gl:begin :line-loop)
-  (loop for i upto 20
-  do
-  (let ((rad (/ (* 2 pi i)
-  20)))
-  (gl:vertex (cos rad) (sin rad))))
-  (gl:end)
-  |#
 
-  )
+  (when nil    
+    (gl:begin :line-loop)
+    (loop for i upto 20
+       do
+         (let ((rad (/ (* 2 pi i)
+                       20)))
+           (gl:vertex (cos rad) (sin rad))))
+    (gl:end)))
 
 (defun render-ship (ship)
   "Render a ship"
@@ -119,9 +119,17 @@
 (defun render-game (game)
   "Render a game"
   (gl:color 0 0 0)
+
+  ;; Clear previous screen
+  (gl:clear-color 0 0.2 0.3 0)
   (gl:clear :color-buffer)
+
+  ;; Ship
   (with-slots (ship) game
     (render-ship ship))
+
+  ;; TODO rocks
+  
   (glut:swap-buffers))
 
 

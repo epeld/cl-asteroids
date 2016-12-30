@@ -1,6 +1,40 @@
 
 (in-package :asteroids)
 
+;;
+;; Vector math
+(declaim (inline vector-add))
+(declaim (inline vector-scale))
+(declaim (inline vector-unit))
+(declaim (inline vector-zero))
+
+
+(defun vector-zero ()
+  "Return the zero vector"
+  (list 0 0))
+
+(defun vector-add (v1 v2)
+  "Add two 2d-vectors"
+  (list (+ (first v1) (first v2))
+        (+ (second v1) (second v2))))
+
+
+(defun vector-scale (k v)
+  "Scale a vector by a coefficient 'k'"
+  (list (* k (first v))
+        (* k (second v))))
+
+
+(defun vector-unit (angle)
+  "Return a unit vector with the given angle"
+  (let ((rads (/ (* 2 pi angle)
+                 360)))
+    (list (cos rads) (sin rads))))
+
+;;
+;; Asteroids definitions
+;; 
+
 
 (defvar *max-ship-velocity*
   2.0
@@ -9,7 +43,7 @@
 (defclass ship ()
   ((position :type list
              :accessor ship-position
-             :initform '(0 0)
+             :initform (vector-zero)
              :documentation "The ship's position")
    (rotation :type number
              :accessor ship-rotation
@@ -17,7 +51,7 @@
              :documentation "The ship's rotation")
    (heading :type list
             :accessor ship-heading
-            :initform '(0 0)
+            :initform (vector-zero)
             :documentation "The ship's heading"))
   (:documentation "The entity representing the player's ship"))
 
@@ -149,27 +183,6 @@
   ;; TODO rocks
   
   (glut:swap-buffers))
-
-
-;;
-;; Vector math
-(defun vector-add (v1 v2)
-  "Add two 2d-vectors"
-  (list (+ (first v1) (first v2))
-        (+ (second v1) (second v2))))
-
-
-(defun vector-scale (k v)
-  "Scale a vector by a coefficient 'k'"
-  (list (* k (first v))
-        (* k (second v))))
-
-
-(defun vector-unit (angle)
-  "Return a unit vector with the given angle"
-  (let ((rads (/ (* 2 pi angle)
-                 360)))
-    (list (cos rads) (sin rads))))
 
 
 ;;

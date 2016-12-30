@@ -6,7 +6,7 @@
 static foo_input_event event_buffer[MAX_EVENTS_PER_CYCLE];
 static int current_event_count = 0;
 
-foo_input_event* new_event(void) {
+foo_input_event* foo_new_event(void) {
   if(current_event_count == MAX_EVENTS_PER_CYCLE - 1) {
     return NULL;
   }

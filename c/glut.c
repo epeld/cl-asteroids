@@ -1,5 +1,4 @@
 
-#include <glut.h>
 #include <GL/freeglut.h>
 
 #include "ui.h"
@@ -29,9 +28,9 @@ void keyboard(unsigned char key, int x, int y) {
   foo_input_event* ev = foo_new_event();
   foo_keyboard_event* kbd = foo_make_keyboard_event(ev);
 
-  kbd.key = key;
-  kbd.x = x;
-  kbd.y = y;
+  kbd->key = key;
+  kbd->x = x;
+  kbd->y = y;
 }
 
 
@@ -68,6 +67,7 @@ void foo_ui_uninit() {
   // TODO
 }
 
-int foo_ui_step() {
-  glutMainLoopEvent();
+int foo_ui_loop() {
+  glutMainLoop();
+  return 0;
 }

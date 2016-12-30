@@ -4,4 +4,4 @@
 int foo_ui_init();
 void foo_ui_uninit();
 
-int foo_ui_step();
+int foo_ui_loop();

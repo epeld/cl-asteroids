@@ -109,6 +109,22 @@
   (:documentation "The projectile that the ship can fire"))
 
 
+(defclass rock ()
+  ((position :type list
+             :accessor rock-position
+             :initform (vector-zero)
+             :documentation "The rock's position")
+   (rotation :type number
+             :accessor rock-rotation
+             :initform 0
+             :documentation "The rock's rotation")
+   (heading :type list
+            :accessor rock-heading
+            :initform (vector-zero)
+            :documentation "The rock's heading"))
+  (:documentation "The rocks that we want to shoot at"))
+
+
 (defclass player-state ()
   ((turning :type keyword
             :accessor player-turning

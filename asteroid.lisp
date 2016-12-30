@@ -79,6 +79,18 @@
   (:documentation "The entity representing the player's ship"))
 
 
+(defclass missile ()
+  ((position :type list
+             :accessor ship-position
+             :initform (vector-zero)
+             :documentation "The ship's position")
+   (rotation :type number
+             :accessor ship-rotation
+             :initform 0
+             :documentation "The ship's rotation"))
+  (:documentation "The projectile that the ship can fire"))
+
+
 (defclass player-state ()
   ((turning :type keyword
             :accessor player-turning
@@ -99,7 +111,13 @@
    
    (player-state :type player-state
                  :accessor game-player
-                 :initform (make-instance 'player-state)))
+                 :initform (make-instance 'player-state))
+
+   (projectile :type missile
+               :accessor asteroids-projectile
+               :initform nil
+               :documentation "The one live projectile instance")
+   )
   (:documentation "A game of asteroids"))
 
 

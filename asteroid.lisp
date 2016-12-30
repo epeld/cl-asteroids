@@ -277,6 +277,30 @@
     (gl:pop-matrix)))
 
 
+(defun render-rock (rock)
+  "Render a rock"
+  ;; TODO use proper drawing routine
+  (unwind-protect
+       (with-slots (position rotation) rock
+         (let ((x (first position))
+               (y (second position)))
+
+           (gl:color 1.0 1.0 1.0)
+           (gl:translate x y 0)
+           (gl:scale 0.05 0.05 0)
+           (gl:rotate rotation 0 0 1)
+
+           
+           (gl:begin :line-loop)
+           (loop for i upto 7
+              do
+                (let ((rad (/ (* 2 pi i)
+                              20)))
+                  (gl:vertex (cos rad) (sin rad))))
+           (gl:end)))
+    (gl:pop-matrix)))
+
+
 (defun render-game (game)
   "Render a game"
   (gl:color 0 0 0)
@@ -286,10 +310,12 @@
   (gl:clear :color-buffer)
 
   ;; Ship
-  (with-slots (ship projectile) game
+  (with-slots (ship projectile rocks) game
     (render-ship ship)
     (when projectile
-      (render-projectile projectile)))
+      (render-projectile projectile))
+    (loop for rock in rocks do
+         (render-rock rock)))
 
   ;; TODO rocks
   

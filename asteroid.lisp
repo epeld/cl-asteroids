@@ -125,7 +125,7 @@
   (:documentation "The rocks that we want to shoot at"))
 
 
-(defclass player-state ()
+(defclass player ()
   ((turning :type keyword
             :accessor player-turning
             :initform nil
@@ -147,9 +147,9 @@
          :initarg :ship
          :documentation "The ship belonging to the player")
    
-   (player-state :type player-state
+   (player :type player
                  :accessor game-player
-                 :initform (make-instance 'player-state))
+                 :initform (make-instance 'player))
 
    (projectile :type projectile
                :accessor asteroids-projectile
@@ -330,12 +330,12 @@
 
 (defun update-game (game tstep)
   "Step the game forward `tstep` units of time"
-  (with-slots (ship projectile player-state) game
+  (with-slots (ship projectile player) game
 
     ;;
     ;; Ship
     ;; 
-    (with-slots (turning thrusting shooting) player-state
+    (with-slots (turning thrusting shooting) player
       (when turning (turn-ship ship tstep turning))
       (when thrusting (thrust-ship ship tstep))
       (when (and shooting (null projectile))

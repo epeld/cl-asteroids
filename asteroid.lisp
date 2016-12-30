@@ -101,10 +101,12 @@
    (heading :type list
             :accessor object-heading
             :initform (vector-zero)
+            :initarg :heading
             :documentation "The object's heading")
    (lifetime :type number
              :accessor object-lifetime
              :initform 0.5
+             :initarg :lifetime
              :documentation "The object's lifetime, in time units"))
   (:documentation "The projectile that the ship can fire"))
 
@@ -309,7 +311,6 @@
   (gl:clear-color 0 0.2 0.3 0)
   (gl:clear :color-buffer)
 
-  ;; Ship
   (with-slots (ship projectile rocks) game
     (render-ship ship)
     (when projectile
@@ -317,8 +318,6 @@
     (loop for rock in rocks do
          (render-rock rock)))
 
-  ;; TODO rocks
-  
   (glut:swap-buffers))
 
 

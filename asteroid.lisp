@@ -143,15 +143,24 @@
    (rocks :type list
           :accessor asteroids-rocks
           :initform nil
+          :initarg :rocks
           :documentation "The list of rocks"))
   
   (:documentation "A game of asteroids"))
 
 
+(defun random-rock ()
+  "Create a random rock"
+  (make-instance 'rock
+                 :position '(0.5 0.2)   ; very random
+                 :heading '(0.02 -0.005)
+                 :rotation 0))
+
 (defun new-game ()
   "Create a new game"
   (make-instance 'asteroids-game
-                 :ship (make-instance 'ship)))
+                 :ship (make-instance 'ship)
+                 :rocks (list (random-rock))))
 
 (defun notify-event (game event)
   "Notify the game that an input event happened"

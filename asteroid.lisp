@@ -347,12 +347,17 @@
   nil)
 
 
+(defun spend-lifetime (object tstep)
+  "Reduce an object's lifetime, returning the remaining amount of lifetime"
+  (setf (object-lifetime object)
+        (max 0 (- (object-lifetime object) tstep))))
+
 (defun update-game (game tstep)
   "Step the game forward `tstep` units of time"
   (with-slots (ship projectile player rocks) game
 
     ;;
-    ;; Ship
+    ;; Player
     ;; 
     (with-slots (turning thrusting shooting) player
       (when turning (turn-ship ship tstep turning))
@@ -360,25 +365,18 @@
       (when (and shooting (null projectile))
         (setf projectile (ship-projectile ship))))
 
-
-    ;; Update position
+    ;;
+    ;; Ship
+    ;; 
     (update-position ship tstep)
 
     ;;
     ;; Projectile
     ;; 
     (when projectile
-      
-      ;; Position
-      (setf (object-position projectile)
-            (vector-add (object-position projectile)
-                        (vector-scale tstep (projectile-heading projectile))))
+      (update-position projectile tstep)
 
-
-      ;; Lifetime
-      (when (zerop (setf (object-lifetime projectile)
-                         (max 0 (- (object-lifetime projectile)
-                                   tstep))))
+      (when (zerop (spend-lifetime projectile tstep))
         (setf projectile nil)))
 
     ;;

@@ -83,6 +83,11 @@
              :initform 0
              :initarg :rotation
              :documentation "The object's rotation")
+   (rotation-speed :type number
+                   :accessor object-rotation-speed
+                   :initform 0
+                   :initarg :rotation-speed
+                   :documentation "Rate of change of the object's rotation")
    (heading :type list
             :accessor object-heading
             :initform (vector-zero)
@@ -108,6 +113,7 @@
              :initarg :lifetime
              :documentation "The object's lifetime, in time units"))
   (:documentation "The projectile that the ship can fire"))
+
 
 (defclass player ()
   ((turning :type keyword
@@ -154,7 +160,8 @@
   (make-instance 'rock
                  :position '(0.5 0.2)   ; very random
                  :heading '(0.02 -0.005)
-                 :rotation 0))
+                 :rotation 0
+                 :rotation-speed 270))
 
 (defun new-game ()
   "Create a new game"
@@ -352,8 +359,13 @@
                  :heading (projectile-heading (object-rotation ship))))
 
 
+;; TODO rename into 'update-object' or something
 (defun update-position (object tstep)
   "Update a game object's position using its heading"
+  (incf (object-rotation object)
+        (* tstep
+           (object-rotation-speed object)))
+  
   (setf (object-position object)
         (vector-add (object-position object)
                     (vector-scale tstep (object-heading object)))))

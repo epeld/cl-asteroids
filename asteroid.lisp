@@ -73,15 +73,15 @@
 
 (defclass ship ()
   ((position :type list
-             :accessor ship-position
+             :accessor object-position
              :initform (vector-zero)
              :documentation "The ship's position")
    (rotation :type number
-             :accessor ship-rotation
+             :accessor object-rotation
              :initform 0
              :documentation "The ship's rotation")
    (heading :type list
-            :accessor ship-heading
+            :accessor object-heading
             :initform (vector-zero)
             :documentation "The ship's heading"))
   (:documentation "The entity representing the player's ship"))
@@ -166,7 +166,7 @@
 (defun notify-event (game event)
   "Notify the game that an input event happened"
   ;(format t "~a~%" event)a
-  ;(format t "Event ~a. Rotation: ~a~%" event (ship-rotation (asteroids-ship game)))
+  ;(format t "Event ~a. Rotation: ~a~%" event (object-rotation (asteroids-ship game)))
   (case (first event)
     (:tick
      t)
@@ -295,11 +295,11 @@
 
 (defun thrust-ship (ship tstep)
   "Apply thrust to ship"
-  (setf (ship-heading ship)
+  (setf (object-heading ship)
         (vector-limit *max-ship-velocity*
-                      (vector-add (ship-heading ship)
+                      (vector-add (object-heading ship)
                                   (vector-scale (* tstep *ship-thrust-acceleration*)
-                                                (vector-unit (ship-rotation ship)))))))
+                                                (vector-unit (object-rotation ship)))))))
 
 
 
@@ -307,25 +307,38 @@
   "Turn ship appropriately"
   (case turning
     (:left
-     (incf (ship-rotation ship)
+     (incf (object-rotation ship)
            (* tstep 360)))
 
     (:right
-     (decf (ship-rotation ship)
+     (decf (object-rotation ship)
            (* tstep 360)))))
+
+
+(defun projectile-heading (rotation)
+  "Calculates the heading vector of a projectile using a rotation angle"
+  (vector-scale *projectile-velocity*
+                (vector-unit rotation)))
 
 
 (defun ship-projectile (ship)
   "Create a projectile emanating from ship"
   (make-instance 'projectile
-                 :position (ship-position ship)
-                 :rotation (ship-rotation ship)))
+                 :position (object-position ship)
+                 :rotation (object-rotation ship)
+                 :heading (projectile-heading (object-rotation ship))))
 
 
-(defun projectile-heading (projectile)
-  "Calculates the heading vector of a projectile, using its rotation"
-  (vector-scale *projectile-velocity*
-                (vector-unit (object-rotation projectile))))
+(defun update-position (object tstep)
+  "Update a game object's position using its heading"
+  (setf (object-position object)
+        (vector-add (object-position object)
+                    (vector-scale tstep (object-heading object)))))
+
+
+(defun check-collision (object1 object2)
+  "TODO"
+  nil)
 
 
 (defun update-game (game tstep)
@@ -343,8 +356,7 @@
 
 
     ;; Update position
-    (setf (ship-position ship)
-          (vector-add (ship-position ship) (vector-scale tstep (ship-heading ship))))
+    (update-position ship tstep)
 
     ;;
     ;; Projectile

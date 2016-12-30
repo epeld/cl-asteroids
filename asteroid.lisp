@@ -45,6 +45,7 @@
 
 (defun notify-event (game event)
   "Notify the game that an input event happened"
+  (format t "~a~%" event)
   ;(format t "Event ~a. Rotation: ~a~%" event (ship-rotation (asteroids-ship game)))
   (case (first event)
     (:tick

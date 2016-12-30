@@ -280,7 +280,7 @@
            (loop for i upto 7
               do
                 (let ((rad (/ (* 2 pi i)
-                              20)))
+                              7)))
                   (gl:vertex (cos rad) (sin rad))))
            (gl:end)))
     (gl:pop-matrix)))

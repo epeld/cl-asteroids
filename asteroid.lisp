@@ -104,7 +104,7 @@
 (defclass projectile (physical-object)
   ((lifetime :type number
              :accessor object-lifetime
-             :initform 0.5
+             :initform 1.0
              :initarg :lifetime
              :documentation "The object's lifetime, in time units"))
   (:documentation "The projectile that the ship can fire"))

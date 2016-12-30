@@ -23,4 +23,5 @@ Basically a list of objects, their positions, rotations etc to be rendered.
 
 1) Change ship color depending on state
 2) Allow ship thrusting
-3) Add some rocks
+3) Add visual effect (= "exhaust") when thrusting
+4) Add some rocks

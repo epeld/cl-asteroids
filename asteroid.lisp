@@ -264,6 +264,7 @@
 (defun render-rock (rock)
   "Render a rock"
   ;; TODO use proper drawing routine
+  (gl:push-matrix)
   (unwind-protect
        (with-slots (position rotation) rock
          (let ((x (first position))

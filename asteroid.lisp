@@ -7,6 +7,9 @@
 (declaim (inline vector-scale))
 (declaim (inline vector-unit))
 (declaim (inline vector-zero))
+(declaim (inline vector-dot))
+(declaim (inline vector-limit))
+(declaim (inline vector-norm-2))
 
 
 (defun vector-zero ()
@@ -31,13 +34,33 @@
                  360)))
     (list (cos rads) (sin rads))))
 
+
+(defun vector-dot (v1 v2)
+  "Calculate the dot product of two vectors"
+  (+ (* (first v1) (first v2))
+     (* (second v1) (second v2))))
+
+(defun vector-norm-2 (v)
+  "Return a vector's length, squared"
+  (vector-dot v v))
+
+
+(defun vector-limit (norm v)
+  "Limit a vector's length, forcing it to be less than 'norm'"
+  (let ((actual-2 (vector-norm-2 v)))
+    (if (> actual-2 (* norm norm))
+        (vector-scale (/ norm (sqrt actual-2))
+                      v)
+        v)))
+
+
 ;;
 ;; Asteroids definitions
 ;; 
 
 
 (defvar *max-ship-velocity*
-  2.0
+  0.05
   "Max velocity for ship, in terms of ship-lengths per second")
 
 (defclass ship ()
@@ -203,9 +226,10 @@
     (with-slots (thrusting) (game-player game)
       (when thrusting
         (setf (ship-heading ship)
-              (vector-add (ship-heading ship)
-                          (vector-scale (* tstep 0.1)
-                                        (vector-unit (ship-rotation ship)))))))
+              (vector-limit *max-ship-velocity*
+                            (vector-add (ship-heading ship)
+                                        (vector-scale (* tstep 0.1)
+                                                      (vector-unit (ship-rotation ship))))))))
 
     ;; Update position
     (setf (ship-position ship)

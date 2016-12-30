@@ -18,6 +18,7 @@
   (gl:clear-color 0 0.5 0.2 0))
 
 (defmethod glut:display ((window base-window))
+  (glut:ignore-key-repeat 1)
   (funcall (render-fn window)))
 
 ;;

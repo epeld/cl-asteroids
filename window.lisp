@@ -11,15 +11,25 @@
   (:documentation "Just a base class so we can do some initialization"))
 
 
+;; This is useful during development since it allows us to keep
+;; the main loop running
+(defmacro with-ignore-restart (&body body)
+  "Adds a restart that allows the user to ignore this error."
+  `(restart-case
+       (progn ,@body)
+     (ignore ()
+       :report "Ignore this error")))
+
 ;;
 ;; Rendering
 
 (defmethod glut:display-window :before ((w base-window))
+  (glut:ignore-key-repeat 1)
   (gl:clear-color 0 0.2 0.3 0))
 
 (defmethod glut:display ((window base-window))
-  (glut:ignore-key-repeat 1)
-  (funcall (render-fn window)))
+  (with-ignore-restart
+    (funcall (render-fn window))))
 
 ;;
 ;; Event Processing
@@ -27,7 +37,8 @@
 (declaim (inline report-event))
 (defun report-event (window event)
   "Report an event"
-  (when (funcall (event-fn window) event)
+  (when (with-ignore-restart
+          (funcall (event-fn window) event))
     (glut:post-redisplay)))
 
 (defun make-event (&rest args)
@@ -59,6 +70,8 @@
 (defmethod glut:special-up ((w base-window) special x y)
   (report-event w (make-event :keyup special x y :special)))
 
+
+
 ;;
 ;; Event Loop
 ;;
@@ -80,18 +93,19 @@
 
   ;; TODO wrap callback funcalls in error handler
   ;; to avoid aborting main thread
-  
-  (funcall event-callback (make-event :enter-event-loop title))
-  
+
   (let ((window (make-instance 'base-window
                                :title title
                                :tick-interval tick-interval)))
+
     
     (setf (event-fn window) event-callback)
     (setf (render-fn window) renderer)
+
+    (report-event window (make-event :enter-event-loop title))
    
     ;; This will block the current thread until window is closed:
     (glut:display-window window)
-    (glut:disable-tick window))
+    (glut:disable-tick window)
 
-  (funcall event-callback (make-event :exit-event-loop title)))
+    (report-event window (make-event :exit-event-loop title))))

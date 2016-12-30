@@ -21,7 +21,6 @@ Basically a list of objects, their positions, rotations etc to be rendered.
 
 # Current TODOs #
 
-1. Work out how to cancel old glut timers so that we don't get spurious redraws - stabilize frame rate!
-2. Change ship color depending on state
-3. Allow ship thrusting
-4. Add some rocks
+1) Change ship color depending on state
+2) Allow ship thrusting
+3) Add some rocks

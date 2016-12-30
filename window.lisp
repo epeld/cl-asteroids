@@ -15,7 +15,7 @@
 ;; Rendering
 
 (defmethod glut:display-window :before ((w base-window))
-  (gl:clear-color 0 0.5 0.2 0))
+  (gl:clear-color 0 0.2 0.3 0))
 
 (defmethod glut:display ((window base-window))
   (glut:ignore-key-repeat 1)

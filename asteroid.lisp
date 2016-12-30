@@ -59,9 +59,17 @@
 ;; 
 
 
-(defvar *max-ship-velocity*
-  0.05
+(defparameter *max-ship-velocity*
+  1.0
   "Max velocity for ship, in terms of ship-lengths per second")
+
+(defparameter *projectile-velocity*
+  2.0
+  "The velocity of the ship's missiles")
+
+
+(defparameter *ship-thrust-acceleration*
+  1.0)
 
 (defclass ship ()
   ((position :type list
@@ -79,15 +87,21 @@
   (:documentation "The entity representing the player's ship"))
 
 
-(defclass missile ()
+(defclass projectile ()
   ((position :type list
-             :accessor ship-position
+             :accessor object-position
              :initform (vector-zero)
-             :documentation "The ship's position")
+             :initarg :position
+             :documentation "The object's position")
    (rotation :type number
-             :accessor ship-rotation
+             :accessor object-rotation
+             :initarg :rotation
              :initform 0
-             :documentation "The ship's rotation"))
+             :documentation "The ship's rotation")
+   (lifetime :type number
+             :accessor object-lifetime
+             :initform 0.5
+             :documentation "The object's lifetime, in time units"))
   (:documentation "The projectile that the ship can fire"))
 
 
@@ -96,10 +110,14 @@
             :accessor player-turning
             :initform nil
             :documentation "Indicates if the direction the player is turning")
-   (thrusting :type thrusting
+   (thrusting :type keyword
               :accessor player-thrusting
               :initform nil
-              :documentation "Indicates if the player is trying to move forward"))
+              :documentation "Indicates if the player is trying to move forward")
+   (shooting :type keyword
+              :accessor player-shooting
+              :initform nil
+              :documentation "Indicates if the player is trying to shoot"))
   (:documentation "Represents information about a player (human or computer)"))
 
 
@@ -113,11 +131,10 @@
                  :accessor game-player
                  :initform (make-instance 'player-state))
 
-   (projectile :type missile
+   (projectile :type projectile
                :accessor asteroids-projectile
                :initform nil
-               :documentation "The one live projectile instance")
-   )
+               :documentation "The one live projectile instance"))
   (:documentation "A game of asteroids"))
 
 
@@ -128,7 +145,7 @@
 
 (defun notify-event (game event)
   "Notify the game that an input event happened"
-  (format t "~a~%" event)
+  ;(format t "~a~%" event)a
   ;(format t "Event ~a. Rotation: ~a~%" event (ship-rotation (asteroids-ship game)))
   (case (first event)
     (:tick
@@ -143,7 +160,10 @@
                   :right))
 
        (#\w (setf (player-thrusting (game-player game))
-                  :thrusting))))
+                  :thrusting))
+
+       (#\Space (setf (player-shooting (game-player game))
+                      :shooting))))
 
     (:keyup
      (case (second event)
@@ -154,7 +174,10 @@
                   nil))
 
        (#\d (setf (player-turning (game-player game))
-                  nil))))))
+                  nil))
+
+       (#\Space (setf (player-shooting (game-player game))
+                      nil))))))
 
 ;;
 ;;  Rendering
@@ -177,17 +200,15 @@
   (gl:vertex (cos (* -5 (/ pi 6))) (sin (* -5 (/ pi 6))))
   (gl:end)
 
+  ;;
+  ;; For debugging:
+  ;;
   ;; Draw a central dot
   (when nil
     (gl:begin :points)
     (gl:vertex 0 0)
     (gl:end))
-
-  ;;
-  ;; For debugging:
-  ;;
-
-
+  
   (when nil    
     (gl:begin :line-loop)
     (loop for i upto 20
@@ -196,6 +217,7 @@
                        20)))
            (gl:vertex (cos rad) (sin rad))))
     (gl:end)))
+
 
 (defun render-ship (ship)
   "Render a ship"
@@ -209,6 +231,26 @@
         (gl:pop-matrix)))))
 
 
+(defun render-projectile (projectile)
+  "Render a projectile"
+  (gl:push-matrix)
+  (unwind-protect
+       (with-slots (position rotation) projectile
+         (let ((x (first position))
+               (y (second position)))
+
+           (gl:color 1.0 0.1 0.1)
+           (gl:translate x y 0)
+           (gl:scale 0.05 0.05 0)
+           (gl:rotate rotation 0 0 1)
+
+           (gl:begin :lines)
+           (gl:vertex 0 0 0)
+           (gl:vertex -0.5 0 0)
+           (gl:end)))
+    (gl:pop-matrix)))
+
+
 (defun render-game (game)
   "Render a game"
   (gl:color 0 0 0)
@@ -218,8 +260,10 @@
   (gl:clear :color-buffer)
 
   ;; Ship
-  (with-slots (ship) game
-    (render-ship ship))
+  (with-slots (ship projectile) game
+    (render-ship ship)
+    (when projectile
+      (render-projectile projectile)))
 
   ;; TODO rocks
   
@@ -234,8 +278,9 @@
   (setf (ship-heading ship)
         (vector-limit *max-ship-velocity*
                       (vector-add (ship-heading ship)
-                                  (vector-scale (* tstep 0.1)
+                                  (vector-scale (* tstep *ship-thrust-acceleration*)
                                                 (vector-unit (ship-rotation ship)))))))
+
 
 
 (defun turn-ship (ship tstep turning)
@@ -250,17 +295,53 @@
            (* tstep 360)))))
 
 
+(defun ship-projectile (ship)
+  "Create a projectile emanating from ship"
+  (make-instance 'projectile
+                 :position (ship-position ship)
+                 :rotation (ship-rotation ship)))
+
+
+(defun projectile-heading (projectile)
+  "Calculates the heading vector of a projectile, using its rotation"
+  (vector-scale *projectile-velocity*
+                (vector-unit (object-rotation projectile))))
+
+
 (defun update-game (game tstep)
   "Step the game forward `tstep` units of time"
-  (let ((ship (asteroids-ship game)))
-    (with-slots (turning thrusting) (game-player game)
+  (with-slots (ship projectile player-state) game
+
+    ;;
+    ;; Ship
+    ;; 
+    (with-slots (turning thrusting shooting) player-state
       (when turning (turn-ship ship tstep turning))
-      (when thrusting (thrust-ship ship tstep)))
+      (when thrusting (thrust-ship ship tstep))
+      (when (and shooting (null projectile))
+        (setf projectile (ship-projectile ship))))
 
 
     ;; Update position
     (setf (ship-position ship)
-          (vector-add (ship-position ship) (ship-heading ship)))))
+          (vector-add (ship-position ship) (vector-scale tstep (ship-heading ship))))
+
+    ;;
+    ;; Projectile
+    ;; 
+    (when projectile
+      
+      ;; Position
+      (setf (object-position projectile)
+            (vector-add (object-position projectile)
+                        (vector-scale tstep (projectile-heading projectile))))
+
+
+      ;; Lifetime
+      (when (zerop (setf (object-lifetime projectile)
+                         (max 0 (- (object-lifetime projectile)
+                                   tstep))))
+        (setf projectile nil)))))
 
 ;;
 ;;  Top Level API

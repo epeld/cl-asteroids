@@ -22,6 +22,6 @@ Basically a list of objects, their positions, rotations etc to be rendered.
 # Current TODOs #
 
 1) Change ship color depending on state
-2) Allow ship thrusting
+2) Support firing shots with ship
 3) Add visual effect (= "exhaust") when thrusting
 4) Add some rocks

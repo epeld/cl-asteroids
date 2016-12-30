@@ -2,6 +2,10 @@
 (in-package :asteroids)
 
 
+(defvar *max-ship-velocity*
+  2.0
+  "Max velocity for ship, in terms of ship-lengths per second")
+
 (defclass ship ()
   ((position :type list
              :accessor ship-position
@@ -10,7 +14,11 @@
    (rotation :type number
              :accessor ship-rotation
              :initform 0
-             :documentation "The ship's rotation"))
+             :documentation "The ship's rotation")
+   (heading :type list
+            :accessor ship-heading
+            :initform '(0 0)
+            :documentation "The ship's heading"))
   (:documentation "The entity representing the player's ship"))
 
 
@@ -57,11 +65,21 @@
                   :left))
 
        (#\d (setf (player-turning (game-player game))
-                  :right))))
+                  :right))
+
+       (#\w (setf (player-thrusting (game-player game))
+                  :thrusting))))
 
     (:keyup
-     (setf (player-turning (game-player game))
-           nil))))
+     (case (second event)
+       (#\w (setf (player-thrusting (game-player game))
+                  nil))
+
+       (#\a (setf (player-turning (game-player game))
+                  nil))
+
+       (#\d (setf (player-turning (game-player game))
+                  nil))))))
 
 ;;
 ;;  Rendering
@@ -75,7 +93,7 @@
   (gl:color 1.0 1.0 1.0)
   (gl:translate x y 0)
   (gl:scale 0.05 0.05 0)
-  (gl:rotate rotation 0 0 -1)
+  (gl:rotate rotation 0 0 1)
 
   ;; Draw
   (gl:begin :line-loop)
@@ -134,6 +152,27 @@
 
 
 ;;
+;; Vector math
+(defun vector-add (v1 v2)
+  "Add two 2d-vectors"
+  (list (+ (first v1) (first v2))
+        (+ (second v1) (second v2))))
+
+
+(defun vector-scale (k v)
+  "Scale a vector by a coefficient 'k'"
+  (list (* k (first v))
+        (* k (second v))))
+
+
+(defun vector-unit (angle)
+  "Return a unit vector with the given angle"
+  (let ((rads (/ (* 2 pi angle)
+                 360)))
+    (list (cos rads) (sin rads))))
+
+
+;;
 ;; Update logic
 (defun update-game (game tstep)
   "Step the game forward `tstep` units of time"
@@ -141,16 +180,23 @@
     (with-slots (turning) (game-player game)
       (case turning
         (:left
-         (decf (ship-rotation ship)
+         (incf (ship-rotation ship)
                (* tstep 360)))
 
         (:right
-         (incf (ship-rotation ship)
+         (decf (ship-rotation ship)
                (* tstep 360)))))
 
-    ;; TODO move the ship forward here
     (with-slots (thrusting) (game-player game)
-      :todo)))
+      (when thrusting
+        (setf (ship-heading ship)
+              (vector-add (ship-heading ship)
+                          (vector-scale (* tstep 0.1)
+                                        (vector-unit (ship-rotation ship)))))))
+
+    ;; Update position
+    (setf (ship-position ship)
+          (vector-add (ship-position ship) (ship-heading ship)))))
 
 ;;
 ;;  Top Level API

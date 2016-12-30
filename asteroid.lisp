@@ -210,26 +210,35 @@
 
 ;;
 ;; Update logic
+
+(defun thrust-ship (ship tstep)
+  "Apply thrust to ship"
+  (setf (ship-heading ship)
+        (vector-limit *max-ship-velocity*
+                      (vector-add (ship-heading ship)
+                                  (vector-scale (* tstep 0.1)
+                                                (vector-unit (ship-rotation ship)))))))
+
+
+(defun turn-ship (ship tstep turning)
+  "Turn ship appropriately"
+  (case turning
+    (:left
+     (incf (ship-rotation ship)
+           (* tstep 360)))
+
+    (:right
+     (decf (ship-rotation ship)
+           (* tstep 360)))))
+
+
 (defun update-game (game tstep)
   "Step the game forward `tstep` units of time"
   (let ((ship (asteroids-ship game)))
-    (with-slots (turning) (game-player game)
-      (case turning
-        (:left
-         (incf (ship-rotation ship)
-               (* tstep 360)))
+    (with-slots (turning thrusting) (game-player game)
+      (when turning (turn-ship ship tstep turning))
+      (when thrusting (thrust-ship ship tstep)))
 
-        (:right
-         (decf (ship-rotation ship)
-               (* tstep 360)))))
-
-    (with-slots (thrusting) (game-player game)
-      (when thrusting
-        (setf (ship-heading ship)
-              (vector-limit *max-ship-velocity*
-                            (vector-add (ship-heading ship)
-                                        (vector-scale (* tstep 0.1)
-                                                      (vector-unit (ship-rotation ship))))))))
 
     ;; Update position
     (setf (ship-position ship)

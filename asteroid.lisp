@@ -54,6 +54,25 @@
         v)))
 
 
+(defun vector-warp (v top-left bottom-right)
+  "'Warp' a fector to stay inside the indicated rectangle"
+  (let ((x (if (< (first v)
+                  (first top-left))
+               (first bottom-right)
+               (if (< (first bottom-right)
+                      (first v))
+                   (first top-left)
+                   (first v))))
+        
+        (y (if (< (second v)
+                  (second top-left))
+               (second bottom-right)
+               (if (< (second bottom-right)
+                      (second v))
+                   (second top-left)
+                   (second v)))))
+    (list x y)))
+
 ;;
 ;; Asteroids definitions
 ;; 
@@ -385,8 +404,10 @@
            (object-rotation-speed object)))
   
   (setf (object-position object)
-        (vector-add (object-position object)
-                    (vector-scale tstep (object-heading object)))))
+        (vector-warp (vector-add (object-position object)
+                                 (vector-scale tstep (object-heading object)))
+                     (list -1 -1)
+                     (list 1 1))))
 
 
 (defun check-collision (object1 object2)

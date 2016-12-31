@@ -238,108 +238,104 @@
 ;;  Rendering
 ;;
 
-;(declaim (inline gl-render-ship))
-(defun gl-render-ship (x y rotation)
-  "Perform the GL operations to render a ship"
-  
-  ;; Setup
-  (gl:color 1.0 1.0 1.0)
-  (gl:translate x y 0)
-  (gl:scale 0.05 0.05 0)
-  (gl:rotate rotation 0 0 1)
+(defmacro with-temp-matrix (&body body)
+  "Pushes the current matrix, executes body, then pops"
+  `(progn (gl:push-matrix)
+          (unwind-protect
+               (progn ,@body))
+          (gl:pop-matrix)))
 
-  ;; Draw
-  (gl:begin :line-loop)
-  (gl:vertex 1 0)
-  (gl:vertex (cos (* 5 (/ pi 6))) (sin (* 5 (/ pi 6))))
-  (gl:vertex (cos (* -5 (/ pi 6))) (sin (* -5 (/ pi 6))))
-  (gl:end)
+(defmacro with-gl-primitives (primitive-type &body body)
+  "Wrap body in a (gl:begin primitive-type) (gl:end) pair"
+  `(progn (gl:begin ,primitive-type)
+          (unwind-protect
+               (progn ,@body)
+            (gl:end))))
 
-  ;;
-  ;; For debugging:
-  ;;
-  ;; Draw a central dot
-  (when nil
-    (gl:begin :points)
-    (gl:vertex 0 0)
-    (gl:end))
-  
-  (when nil    
-    (gl:begin :line-loop)
-    (loop for i upto 20
-       do
-         (let ((rad (/ (* 2 pi i)
-                       20)))
-           (gl:vertex (cos rad) (sin rad))))
-    (gl:end)))
+(defmacro with-object-coords (object &rest clauses)
+  "Temporarily switch to an object-centric coordinate system.
+Expects clauses of the form: (primitive-type body*) which will be used in with-gl-primitives to set up a gl rendering context."
+  `(with-temp-matrix
+     (gl-object-transform ,object)
+     ,@(loop for clause in clauses
+          unless
+            (eq (first clause)
+                :ignore)
+          collect
+            `(with-gl-primitives ,(first clause)
+               ,@ (rest clause)))))
+
+
+(declaim (inline gl-object-transform))
+(defun gl-object-transform (object)
+  "Translate the coordinate system so that object is at center and a ship has length 1.0.
+Rotate the axes so that the x-axis is aligned with the object"
+  (with-slots (position rotation) object
+    (let ((x (car position))
+          (y (cadr position)))
+
+      (gl:translate x y 0)
+      (gl:scale 0.05 0.05 0)
+      (gl:rotate rotation 0 0 1))))
 
 
 (defun render-ship (ship)
   "Render a ship"
   (the ship ship)
-  (with-slots (position rotation) ship
-    (let ((x (car position))
-          (y (cadr position)))
+  (gl:color 1.0 1.0 1.0)
+  
+  (with-object-coords ship
+    (:line-loop
+     (gl:vertex 1
+                0)
+     
+     (gl:vertex (cos (* 5 (/ pi 6)))
+                (sin (* 5 (/ pi 6))))
+     
+     (gl:vertex (cos (* -5 (/ pi 6)))
+                (sin (* -5 (/ pi 6)))))
 
-      (gl:push-matrix)
-      (unwind-protect (gl-render-ship x y rotation)
-        (gl:pop-matrix)))))
+    (:ignore (:line-loop
+              (loop for i upto 20
+                 do
+                   (let ((rad (/ (* 2 pi i)
+                                 20)))
+                     (gl:vertex (cos rad) (sin rad))))))
+
+    (:points
+     (gl:vertex 0 0))))
 
 
 (defun render-projectile (projectile)
   "Render a projectile"
-  (gl:push-matrix)
-  (unwind-protect
-       (with-slots (position rotation) projectile
-         (let ((x (first position))
-               (y (second position)))
-
-           (gl:color 1.0 0.1 0.1)
-           (gl:translate x y 0)
-           (gl:scale 0.05 0.05 0)
-           (gl:rotate rotation 0 0 1)
-
-           (gl:begin :lines)
-           (gl:vertex 0 0 0)
-           (gl:vertex -0.5 0 0)
-           (gl:end)))
-    (gl:pop-matrix)))
+  (gl:color 1.0 0.1 0.1)
+  (with-object-coords projectile
+    (:lines
+     (gl:vertex 0 0 0)
+     (gl:vertex -0.5 0 0))))
 
 
 (defun render-rock (rock)
   "Render a rock"
-  ;; TODO use proper drawing routine
-  (gl:push-matrix)
-  (unwind-protect
-       (with-slots (position rotation) rock
-         (let ((x (first position))
-               (y (second position)))
+  (gl:color 1.0 1.0 1.0)
+  (with-object-coords rock
+    (:line-loop
+     (let ((num-vertices (rock-num-vertices rock)))
+       (flet ((vertex (i)
+                (let ((rad (/ (* 2 pi i)
+                              num-vertices))
+                      (r (cond ((zerop (mod i 7))
+                                0.5)
 
-           (gl:color 1.0 1.0 1.0)
-           (gl:translate x y 0)
-           (gl:scale 0.05 0.05 0)
-           (gl:rotate rotation 0 0 1)
+                               ((and (< num-vertices 8)
+                                     (zerop (mod i 4)))
+                                0.7)
 
-           
-           (gl:begin :line-loop)
-           (let ((num-vertices (rock-num-vertices rock)))
-)             (flet ((vertex (i)
-                      (let ((rad (/ (* 2 pi i)
-                                    num-vertices))
-                            (r (cond ((zerop (mod i 7))
-                                      0.5)
-
-                                     ((and (< num-vertices 8)
-                                           (zerop (mod i 4)))
-                                      0.7)
-
-                                     (t 1.0))))
+                               (t 1.0))))
                   
-                        (gl:vertex (* r (cos rad))
-                                   (* r (sin rad))))))
-             (loop for i upto num-vertices do (vertex i))))
-           (gl:end)))
-    (gl:pop-matrix)))
+                  (gl:vertex (* r (cos rad))
+                             (* r (sin rad))))))
+         (loop for i upto num-vertices do (vertex i)))))))
 
 
 (defun render-game (game)

@@ -172,7 +172,8 @@
    
    (player :type player
            :accessor game-player
-           :initform (make-instance 'player))
+           :initform (make-instance 'player)
+           :documentation "Information about what the human player is up to")
 
    (projectile :type projectile
                :accessor asteroids-projectile

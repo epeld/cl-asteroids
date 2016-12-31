@@ -60,7 +60,7 @@
 
 
 (defun vector-warp (v top-left bottom-right)
-  "'Warp' a fector to stay inside the indicated rectangle"
+  "'Warp' a vector to stay inside the indicated rectangle"
   (let ((x (if (< (first v)
                   (first top-left))
                (first bottom-right)

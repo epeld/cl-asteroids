@@ -409,8 +409,8 @@
   (setf (object-position object)
         (vector-warp (vector-add (object-position object)
                                  (vector-scale tstep (object-heading object)))
-                     (list -1 -1)
-                     (list 1 1))))
+                     (list -1.05 -1.05)
+                     (list 1.05 1.05))))
 
 
 (defun check-collision (object1 object2)

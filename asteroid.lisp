@@ -165,7 +165,10 @@
                  :position '(0.5 0.2)   ; very random
                  :heading '(0.02 -0.005)
                  :rotation 0
-                 :rotation-speed 270))
+                 :num-vertices (+ 7
+                                  (* 2 (random 2)))
+                 :rotation-speed (- (random 360)
+                                    180)))
 
 (defun new-game ()
   "Create a new game"

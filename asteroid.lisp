@@ -266,6 +266,11 @@ Expects clauses of the form: (primitive-type body*) which will be used in with-g
                ,@ (rest clause)))))
 
 
+(declaim (inline gl-vertex-unit))
+(defun gl-vertex-unit (radians &optional (radius 1.0))
+  "Use gl:vertex with a point from the x-y plane unit circle"
+  (gl:vertex (* radius (cos radians)) (* radius (sin radians)) 0))
+
 (declaim (inline gl-object-transform))
 (defun gl-object-transform (object)
   "Translate the coordinate system so that object is at center and a ship has length 1.0.
@@ -286,21 +291,14 @@ Rotate the axes so that the x-axis is aligned with the object"
   
   (with-object-coords ship
     (:line-loop
-     (gl:vertex 1
-                0)
-     
-     (gl:vertex (cos (* 5 (/ pi 6)))
-                (sin (* 5 (/ pi 6))))
-     
-     (gl:vertex (cos (* -5 (/ pi 6)))
-                (sin (* -5 (/ pi 6)))))
+     (gl-vertex-unit 0)
+     (gl-vertex-unit (* 5 (/ pi 6)))
+     (gl-vertex-unit (* -5 (/ pi 6))))
 
     (:ignore (:line-loop
-              (loop for i upto 20
-                 do
-                   (let ((rad (/ (* 2 pi i)
-                                 20)))
-                     (gl:vertex (cos rad) (sin rad))))))
+              (loop for i upto 20 do
+                   (gl-vertex-unit (/ (* 2 pi i)
+                                      20)))))
 
     (:points
      (gl:vertex 0 0))))
@@ -333,8 +331,7 @@ Rotate the axes so that the x-axis is aligned with the object"
 
                                (t 1.0))))
                   
-                  (gl:vertex (* r (cos rad))
-                             (* r (sin rad))))))
+                  (gl-vertex-unit rad r))))
          (loop for i upto num-vertices do (vertex i)))))))
 
 

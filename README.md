@@ -4,6 +4,8 @@ This is an asteroids clone developmed using `cl-opengl`.
 
 For now, just running `(ql:quickload :cl-game)` should be enough to get going.
 
+Then, to start the game, go to asteroids.lisp and run `(game-loop)`.
+
 # Current TODOs #
 
 + Add some rocks

@@ -405,7 +405,8 @@
   (incf (object-rotation object)
         (* tstep
            (object-rotation-speed object)))
-  
+
+  ;; TODO don't warp projectiles
   (setf (object-position object)
         (vector-warp (vector-add (object-position object)
                                  (vector-scale tstep (object-heading object)))

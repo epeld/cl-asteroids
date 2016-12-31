@@ -185,7 +185,7 @@
     
   (make-instance 'rock
                  :position (vector-scale r (vector-unit arg))
-                 :heading (vector-scale 0.01 (vector-unit (random 360)))
+                 :heading (vector-scale 0.1 (vector-unit (random 360)))
                  :rotation 0
                  :num-vertices (+ 7
                                   (* 2 (random 2)))

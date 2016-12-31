@@ -97,6 +97,11 @@
              :initform (vector-zero)
              :initarg :position
              :documentation "The object's position")
+   (scale :type number
+          :accessor object-scale
+          :initform 0.05
+          :initarg :scale
+          :documentation "The object's scale (used for collision detection and rendering)")
    (rotation :type number
              :accessor object-rotation
              :initform 0
@@ -187,6 +192,7 @@
                  :position (vector-scale r (vector-unit arg))
                  :heading (vector-scale 0.1 (vector-unit (random 360)))
                  :rotation 0
+                 :scale (+ 0.05 (random 0.1))
                  :num-vertices (+ 7
                                   (* 2 (random 2)))
                  :rotation-speed (- (random 360)
@@ -271,16 +277,17 @@ Expects clauses of the form: (primitive-type body*) which will be used in with-g
   "Use gl:vertex with a point from the x-y plane unit circle"
   (gl:vertex (* radius (cos radians)) (* radius (sin radians)) 0))
 
+
 (declaim (inline gl-object-transform))
 (defun gl-object-transform (object)
   "Translate the coordinate system so that object is at center and a ship has length 1.0.
 Rotate the axes so that the x-axis is aligned with the object"
-  (with-slots (position rotation) object
+  (with-slots (position rotation scale) object
     (let ((x (car position))
           (y (cadr position)))
 
       (gl:translate x y 0)
-      (gl:scale 0.05 0.05 0)
+      (gl:scale scale scale 0)
       (gl:rotate rotation 0 0 1))))
 
 
@@ -415,10 +422,14 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 
 (defun check-collision (object1 object2)
-  "TODO"
-  (< (vector-norm-2 (vector-add (object-position object1)
-                                (vector-scale -1 (object-position object2))))
-     0.005))
+  "Check if two objects collide"
+  (let ((x (+ (object-scale object1)
+              (object-scale object2)))
+
+        (d-2 (vector-norm-2 (vector-add (object-position object1)
+                                      (vector-scale -1 (object-position object2))))))
+    
+    (< d-2 (* x x))))
 
 
 (defun spend-lifetime (object tstep)

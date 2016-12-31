@@ -196,7 +196,7 @@
   "Create a new game"
   (make-instance 'asteroids-game
                  :ship (make-instance 'ship)
-                 :rocks (list (random-rock))))
+                 :rocks (loop repeat 10 collect (random-rock))))
 
 (defun notify-event (game event)
   "Notify the game that an input event happened"

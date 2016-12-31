@@ -180,14 +180,17 @@
 
 (defun random-rock ()
   "Create a random rock"
+  (let ((r (+ 0.5 (random 1.0)))
+        (arg (random 360.0)))
+    
   (make-instance 'rock
-                 :position '(0.5 0.2)   ; very random
-                 :heading '(0.02 -0.005)
+                 :position (vector-scale r (vector-unit arg))
+                 :heading (vector-scale 0.01 (vector-unit (random 360)))
                  :rotation 0
                  :num-vertices (+ 7
                                   (* 2 (random 2)))
                  :rotation-speed (- (random 360)
-                                    180)))
+                                    180))))
 
 (defun new-game ()
   "Create a new game"

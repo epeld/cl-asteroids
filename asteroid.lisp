@@ -297,11 +297,22 @@
 
            
            (gl:begin :line-loop)
-           (loop for i upto 7
-              do
-                (let ((rad (/ (* 2 pi i)
-                              7)))
-                  (gl:vertex (cos rad) (sin rad))))
+           (let ((num-vertices (rock-num-vertices rock)))
+)             (flet ((vertex (i)
+                      (let ((rad (/ (* 2 pi i)
+                                    num-vertices))
+                            (r (cond ((zerop (mod i 7))
+                                      0.5)
+
+                                     ((and (< num-vertices 8)
+                                           (zerop (mod i 4)))
+                                      0.7)
+
+                                     (t 1.0))))
+                  
+                        (gl:vertex (* r (cos rad))
+                                   (* r (sin rad))))))
+             (loop for i upto num-vertices do (vertex i))))
            (gl:end)))
     (gl:pop-matrix)))
 

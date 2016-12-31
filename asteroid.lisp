@@ -102,7 +102,11 @@
 
 
 (defclass rock (physical-object)
-  ()
+  ((num-vertices :type number
+                 :accessor rock-num-vertices
+                 :initform 9
+                 :initarg :num-vertices
+                 :documentation "The vertex count to use when rendering"))
   (:documentation "The rocks that we want to shoot at"))
 
 

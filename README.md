@@ -8,9 +8,9 @@ Then, to start the game, go to asteroids.lisp and run `(game-loop)`.
 
 # Current TODOs #
 
-+ Figure out how to split rocks
-+ Specialize update-object to do different things
 + Add visual effect (= "exhaust") when thrusting
++ Collision detect the ship as well
++ Specialize update-object to do different things
 + Figure out units of length
 
 # Less Important TODOs #

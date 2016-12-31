@@ -8,7 +8,6 @@ For now, just running `(ql:quickload :cl-game)` should be enough to get going.
 
 + Add some rocks
 + Specialize update-object to do different things
-+ Apply 'warping' - forcing ship to stay within screen bounds
 + Figure out how to split rocks
 + Add visual effect (= "exhaust") when thrusting
 + Figure out units of length

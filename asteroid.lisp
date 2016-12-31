@@ -416,13 +416,22 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (defun check-collision (object1 object2)
   "TODO"
-  nil)
+  (< (vector-norm-2 (vector-add (object-position object1)
+                                (vector-scale -1 (object-position object2))))
+     0.005))
 
 
 (defun spend-lifetime (object tstep)
   "Reduce an object's lifetime, returning the remaining amount of lifetime"
   (setf (object-lifetime object)
         (max 0 (- (object-lifetime object) tstep))))
+
+
+(defun split-rock (rock)
+  "Split a rock into two"
+  :todo
+  (list))
+
 
 (defun update-game (game tstep)
   "Step the game forward `tstep` units of time"
@@ -454,14 +463,21 @@ Rotate the axes so that the x-axis is aligned with the object"
     ;;
     ;; Rocks
     ;;
-    (loop for rock in rocks
-       do
-         (update-position rock tstep)
-       when
-         (and projectile
-              (check-collision projectile rock))
-       collect
-         rock)))
+    (let (new-rocks old-rocks)
+      (setf old-rocks
+            (loop for rock in rocks
+                       do
+                         (update-position rock tstep)
+                       if
+                         (and projectile
+                              (check-collision projectile rock))
+                       do
+                         (setf projectile nil)
+                         (setf new-rocks (split-rock rock))
+                       else
+               collect rock))
+      
+      (setf rocks (append new-rocks old-rocks)))))
 
 ;;
 ;;  Top Level API

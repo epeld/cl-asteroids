@@ -10,6 +10,7 @@
 (declaim (inline vector-dot))
 (declaim (inline vector-limit))
 (declaim (inline vector-norm-2))
+(declaim (inline vector-norm))
 
 
 (defun vector-zero ()
@@ -43,6 +44,10 @@
 (defun vector-norm-2 (v)
   "Return a vector's length, squared"
   (vector-dot v v))
+
+(defun vector-norm (v)
+  "Return a vector's length"
+  (sqrt (vector-norm-2 v)))
 
 
 (defun vector-limit (norm v)
@@ -188,7 +193,7 @@
   (let ((r (+ 0.5 (random 1.0)))
         (arg (random 360.0)))
     
-  (make-instance 'rock
+    (make-instance 'rock
                  :position (vector-scale r (vector-unit arg))
                  :heading (vector-scale 0.1 (vector-unit (random 360)))
                  :rotation 0
@@ -427,7 +432,7 @@ Rotate the axes so that the x-axis is aligned with the object"
               (object-scale object2)))
 
         (d-2 (vector-norm-2 (vector-add (object-position object1)
-                                      (vector-scale -1 (object-position object2))))))
+                                        (vector-scale -1 (object-position object2))))))
     
     (< d-2 (* x x))))
 
@@ -440,8 +445,21 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (defun split-rock (rock)
   "Split a rock into two"
-  :todo
-  (list))
+  (with-slots (position heading scale) rock
+    (flet ((make-rock ()
+             (make-instance 'rock
+                            :position position
+                            :heading (vector-scale (vector-norm heading)
+                                                   (vector-unit (random 360)))
+                            :rotation 0
+                            :scale (* scale (+ 0.7
+                                               (random 0.3)))
+                            :num-vertices (+ 7
+                                             (* 2 (random 2)))
+                            :rotation-speed (- (random 360)
+                                               180))))
+    
+      (list (make-rock) (make-rock)))))
 
 
 (defun update-game (game tstep)
@@ -477,15 +495,16 @@ Rotate the axes so that the x-axis is aligned with the object"
     (let (new-rocks old-rocks)
       (setf old-rocks
             (loop for rock in rocks
-                       do
-                         (update-position rock tstep)
-                       if
-                         (and projectile
+               do
+                 (update-position rock tstep)
+               if
+                 (and projectile
                               (check-collision projectile rock))
-                       do
-                         (setf projectile nil)
-                         (setf new-rocks (split-rock rock))
-                       else
+               do
+                 (setf projectile nil)
+                 (when (> (object-scale rock) 0.05)
+                   (setf new-rocks (split-rock rock)))
+               else
                collect rock))
       
       (setf rocks (append new-rocks old-rocks)))))

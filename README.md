@@ -7,7 +7,6 @@ For now, just running `(ql:quickload :cl-game)` should be enough to get going.
 # Current TODOs #
 
 + Add some rocks
-+ Figure out how to draw pretty rocks
 + Specialize update-object to do different things
 + Apply 'warping' - forcing ship to stay within screen bounds
 + Figure out how to split rocks

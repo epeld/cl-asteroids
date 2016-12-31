@@ -399,6 +399,13 @@
                  :heading (projectile-heading (object-rotation ship))))
 
 
+(defun warp-object (object top-left bottom-right)
+  "Warp an object, forcing it to stay inside the rect"
+  (setf (object-position object)
+        (vector-warp (object-position object)
+                     top-left bottom-right)))
+
+
 ;; TODO rename into 'update-object' or something
 (defun update-position (object tstep)
   "Update a game object's position using its heading"

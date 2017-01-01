@@ -616,7 +616,7 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (defun ship-collisions (game)
   "Handle ship collisions, if any"
-  (with-slots (ship rocks) game
+  (with-slots (ship rocks particles) game
     (when (and (object-alive-p ship)
                (some (lambda (rock)
                        (check-collision ship rock))
@@ -624,7 +624,11 @@ Rotate the axes so that the x-axis is aligned with the object"
       
       (format t "Game Over!~%")
       (setf (object-alive-p ship)
-            nil))))
+            nil)
+      
+      (setf particles
+            (append (particle-spray ship 30)
+                    particles)))))
 
 
 (defun particle-spray (object n &optional color)

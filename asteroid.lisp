@@ -316,7 +316,7 @@ Rotate the axes so that the x-axis is aligned with the object"
   (gl:color 1.0 1.0 1.0)
   
   (with-object-coords ship
-    (:line-loop
+    (:polygon
      (gl-vertex-unit 0)
      (gl-vertex-unit (* 5 (/ pi 6)))
      (gl-vertex-unit (* -5 (/ pi 6))))
@@ -326,8 +326,8 @@ Rotate the axes so that the x-axis is aligned with the object"
                    (gl-vertex-unit (/ (* 2 pi i)
                                       20)))))
 
-    (:points
-     (gl:vertex 0 0))))
+    (:ignore (:points
+              (gl:vertex 0 0)))))
 
 
 (defun render-projectile (projectile)
@@ -345,9 +345,29 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (defun render-rock (rock)
   "Render a rock"
-  (gl:color 0.7 0.8 0.7)
+  ;; Use the rock's scale to vary its color
+  (let ((color (object-scale rock)))
+    (gl:color color (* 1.2 color) color))
+  
   (with-object-coords rock
+    (:polygon
+     (let ((num-vertices (rock-num-vertices rock)))
+       (flet ((vertex (i)
+                (let ((rad (/ (* 2 pi i)
+                              num-vertices))
+                      (r (cond ((zerop (mod i 7))
+                                0.5)
+
+                               ((and (< num-vertices 8)
+                                     (zerop (mod i 4)))
+                                0.7)
+
+                               (t 1.0))))
+                  
+                  (gl-vertex-unit rad r))))
+         (loop for i upto num-vertices do (vertex i)))))
     (:line-loop
+     (gl:color 1 1 1)
      (let ((num-vertices (rock-num-vertices rock)))
        (flet ((vertex (i)
                 (let ((rad (/ (* 2 pi i)
@@ -370,7 +390,7 @@ Rotate the axes so that the x-axis is aligned with the object"
   (gl:color 0 0 0)
 
   ;; Clear previous screen
-  (gl:clear-color 0 0.2 0.3 0)
+  (gl:clear-color 0 0.25 0.35 0)
   (gl:clear :color-buffer)
 
   (with-slots (ship projectile rocks) game
@@ -563,15 +583,21 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 ;;
 ;;  Top Level API
-;; 
+;;
+(defvar *current-game* nil
+  "The currently running game, if any")
+
+
 (defun game-loop (&key (game (new-game)))
   "Enter a game loop running the specified game"
+  (setf *current-game* game)
   (window:event-loop :title "Asteroids"
                      :event-callback (lambda (event)
                                        (notify-event game event))
                      :renderer (lambda ()
                                  (update-game game 0.020)
-                                 (render-game game))
+                                 (render-game game)
+                                 (swank::process-requests t))
                      :tick-interval 20))
 
 
@@ -580,3 +606,8 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (quote (game-loop))
 (quote (ql:quickload :cl-game))
+
+(quote (progn
+         (setf (object-alive-p (asteroids-ship *current-game*)) t))
+       (setf (object-heading (asteroids-ship *current-game*)) (list 0 0))
+       (setf (object-position (asteroids-ship *current-game*)) (list 0 0)))

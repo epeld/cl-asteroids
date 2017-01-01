@@ -341,7 +341,7 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (defun render-rock (rock)
   "Render a rock"
-  (gl:color 1.0 1.0 1.0)
+  (gl:color 0.7 0.8 0.7)
   (with-object-coords rock
     (:line-loop
      (let ((num-vertices (rock-num-vertices rock)))

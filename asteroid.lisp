@@ -132,7 +132,9 @@
 
 
 (defclass ship (physical-object)
-  ()
+  ((alive :initform t
+          :accessor object-alive-p
+          :documentation "Flag indicating if ship is alive"))
   (:documentation "The entity representing the player's ship"))
 
 
@@ -368,7 +370,8 @@ Rotate the axes so that the x-axis is aligned with the object"
   (gl:clear :color-buffer)
 
   (with-slots (ship projectile rocks) game
-    (render-ship ship)
+    (when (object-alive-p ship)
+      (render-ship ship))
     (when projectile
       (render-projectile projectile))
     (loop for rock in rocks do
@@ -518,10 +521,14 @@ Rotate the axes so that the x-axis is aligned with the object"
 (defun ship-collisions (game)
   "Handle ship collisions, if any"
   (with-slots (ship rocks) game
-    (when (some (lambda (rock)
-                  (check-collision ship rock))
-                rocks)
-      (format t "Game Over!~%"))))
+    (when (and (object-alive-p ship)
+               (some (lambda (rock)
+                       (check-collision ship rock))
+                     rocks))
+      
+      (format t "Game Over!~%")
+      (setf (object-alive-p ship)
+            nil))))
 
 
 (defun projectile-rock-collisions (game)

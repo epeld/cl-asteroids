@@ -147,6 +147,20 @@
   (:documentation "The rocks that we want to shoot at"))
 
 
+(defclass particle (physical-object)
+  ((lifetime :type number
+             :accessor object-lifetime
+             :initform 1.0
+             :initarg :lifetime
+             :documentation "The object's lifetime, in time units")
+   (color :type list
+          :accessor object-color
+          :initform (list 1.0 1.0 1.0)
+          :initarg :color
+          :documentation "The particles color"))
+  (:documentation "A particle with a limited lifetime"))
+
+
 (defclass projectile (physical-object)
   ((lifetime :type number
              :accessor object-lifetime

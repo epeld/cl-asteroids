@@ -161,18 +161,14 @@
   (:documentation "A particle with a limited lifetime"))
 
 
-(defclass projectile (physical-object)
-  ((lifetime :type number
-             :accessor object-lifetime
-             :initform 1.0
-             :initarg :lifetime
-             :documentation "The object's lifetime, in time units"))
+(defclass projectile (particle)
+  ()
   (:documentation "The projectile that the ship can fire"))
 
-(defmethod initialize-instance :after ((projectile projectile) &rest args)
+
+(defmethod initialize-instance :after ((particle particle) &rest args)
   (declare (ignore args))
-  (setf (object-warps-p projectile)
-        nil))
+  (setf (object-warps-p particle) nil))
 
 
 (defclass player ()
@@ -362,6 +358,17 @@ Rotate the axes so that the x-axis is aligned with the object"
      (gl:vertex -1.0 0 0))))
 
 
+(defun render-particle (particle)
+  "Render a particle"
+  (apply #'gl:color (object-color particle))
+  (with-object-coords particle
+    (:lines
+     (gl:vertex 0 0 0)
+     (gl:vertex -0.5 0 0))
+    (:points
+     (gl:vertex -1.0 0 0))))
+
+
 (defun render-rock (rock)
   "Render a rock"
   ;; Use the rock's scale to vary its color
@@ -412,7 +419,9 @@ Rotate the axes so that the x-axis is aligned with the object"
   (gl:clear-color 0 0.25 0.35 0)
   (gl:clear :color-buffer)
 
-  (with-slots (ship projectile rocks) game
+  (with-slots (ship projectile rocks particles) game
+    (loop for particle in particles do
+         (render-particle particle))
     (when (object-alive-p ship)
       (render-ship ship))
     (when projectile
@@ -448,12 +457,6 @@ Rotate the axes so that the x-axis is aligned with the object"
            (* tstep 360)))))
 
 
-(defun projectile-heading (rotation)
-  "Calculates the heading vector of a projectile using a rotation angle"
-  (vector-scale *projectile-velocity*
-                (vector-unit rotation)))
-
-
 (defun rotation-spread (offset spread)
   "Randomize a value withing the range (offset-spread,offset+spread]"
   (+ offset
@@ -463,13 +466,17 @@ Rotate the axes so that the x-axis is aligned with the object"
             (/ spread 2)))))
 
 
-(defun object-projectile (object &optional (class 'projectile) (rotation (object-rotation object)))
+(defun object-projectile (object &optional
+                                   (class 'projectile)
+                                   (rotation (object-rotation object))
+                                   (speed *projectile-velocity*))
   "Create a projectile emanating from object, with an angular spread and an angular offset"
   ;; Generate a random new rotation
   (make-instance class
                  :position (object-position object)
                  :rotation rotation
-                 :heading (projectile-heading rotation)))
+                 :heading (vector-scale speed
+                                        (vector-unit rotation))))
 
 
 (defun warp-object (object top-left bottom-right)
@@ -507,7 +514,7 @@ Rotate the axes so that the x-axis is aligned with the object"
                  (list 1.05 1.05))))
 
 
-(defmethod update-object :after ((object projectile) tstep)
+(defmethod update-object :after ((object particle) tstep)
   (spend-lifetime object tstep))
 
 
@@ -557,10 +564,13 @@ Rotate the axes so that the x-axis is aligned with the object"
       
       (when thrusting
         (thrust-ship ship tstep)
-        (loop repeat (/ tstep 0.1) do
-             (push (object-projectile ship 'particle
-                                      (rotation-spread 180 20))
-                   particles)))
+        (loop repeat (* tstep 10) do
+             (let ((p (object-projectile ship 'particle
+                                         (rotation-spread (+ 180 (object-rotation ship))
+                                                          15)
+                                         (/ *projectile-velocity* 2))))
+               (setf (object-lifetime p) 0.5)
+               (push p particles))))
       
       (when (and shooting (null projectile))
         (setf projectile (object-projectile ship))))))
@@ -568,14 +578,27 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (defun update-objects (game tstep)
   "Update all the game's objects"
-  (with-slots (ship projectile rocks) game
+  (with-slots (ship projectile rocks particles) game
 
+    ;; Ship
     (update-object ship tstep)
+
+    ;; Rocks
     (loop for rock in rocks do (update-object rock tstep))
+
+    ;; Projectile
     (when projectile
       (update-object projectile tstep)
       (when (zerop (object-lifetime projectile))
-        (setf projectile nil)))))
+        (setf projectile nil)))
+
+
+    ;; Particles
+    (loop for particle in particles do (update-object particle tstep))
+    (setf particles
+          (delete-if (lambda (p)
+                       (zerop (object-lifetime p)))
+                     particles))))
 
 
 (defun ship-collisions (game)

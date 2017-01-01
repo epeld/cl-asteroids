@@ -10,11 +10,11 @@ For now, just running `(ql:quickload :cl-game)` should be enough to get going.
 Then, to start the game, go to asteroids.lisp and run `(game-loop)`.
 
 # Current TODOs #
-
-+ Add visual effect (= "exhaust") when thrusting
-+ Figure out units of length
++ Create a Menu System
++ Score Keeping
 
 # Less Important TODOs #
 + Change ship color depending on state
 + Move vector math to separate package
 + Move Top Level API (game-loop) to separate package
++ Figure out units of length (to allow easier scaling etc..)

@@ -336,7 +336,11 @@ Rotate the axes so that the x-axis is aligned with the object"
   (with-object-coords projectile
     (:lines
      (gl:vertex 0 0 0)
-     (gl:vertex -0.5 0 0))))
+     (gl:vertex -0.5 0 0)
+     (gl:vertex 0 0.25 0)
+     (gl:vertex 0 -0.25 0))
+    (:points
+     (gl:vertex -1.0 0 0))))
 
 
 (defun render-rock (rock)

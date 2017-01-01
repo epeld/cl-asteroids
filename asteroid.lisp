@@ -454,19 +454,22 @@ Rotate the axes so that the x-axis is aligned with the object"
                 (vector-unit rotation)))
 
 
-(defun object-projectile (object &optional (spread 0) (offset 0))
+(defun rotation-spread (offset spread)
+  "Randomize a value withing the range (offset-spread,offset+spread]"
+  (+ offset
+     (if (zerop spread)
+         0
+         (- (random spread)
+            (/ spread 2)))))
+
+
+(defun object-projectile (object &optional (class 'projectile) (rotation (object-rotation object)))
   "Create a projectile emanating from object, with an angular spread and an angular offset"
   ;; Generate a random new rotation
-  (let ((rotation (if spread
-                      (+ (+ offset (object-rotation object))
-                         (- (/ spread 2))
-                         (random spread))
-                      (object-rotation object))))
-    
-    (make-instance 'projectile
-                   :position (object-position object)
-                   :rotation rotation
-                   :heading (projectile-heading rotation))))
+  (make-instance class
+                 :position (object-position object)
+                 :rotation rotation
+                 :heading (projectile-heading rotation)))
 
 
 (defun warp-object (object top-left bottom-right)
@@ -547,11 +550,18 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (defun control-ship (game tstep)
   "Apply player actions to ship"
-  (with-slots (ship projectile player) game
+  (with-slots (ship projectile player particles) game
     
     (with-slots (turning thrusting shooting) player
       (when turning (turn-ship ship tstep turning))
-      (when thrusting (thrust-ship ship tstep))
+      
+      (when thrusting
+        (thrust-ship ship tstep)
+        (loop repeat (/ tstep 0.1) do
+             (push (object-projectile ship 'particle
+                                      (rotation-spread 180 20))
+                   particles)))
+      
       (when (and shooting (null projectile))
         (setf projectile (object-projectile ship))))))
 

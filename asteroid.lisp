@@ -98,6 +98,9 @@
 (defparameter *rock-minimum-split-scale*
   0.05)
 
+(defparameter *particle-speed*
+  (/ *projectile-velocity* 2))
+
 
 (defclass physical-object ()
   ((position :type list
@@ -155,7 +158,7 @@
              :documentation "The object's lifetime, in time units")
    (color :type list
           :accessor object-color
-          :initform (list 1.0 1.0 1.0)
+          :initform (list 0.8 0.8 1.0)
           :initarg :color
           :documentation "The particles color"))
   (:documentation "A particle with a limited lifetime"))
@@ -364,9 +367,7 @@ Rotate the axes so that the x-axis is aligned with the object"
   (with-object-coords particle
     (:lines
      (gl:vertex 0 0 0)
-     (gl:vertex -0.5 0 0))
-    (:points
-     (gl:vertex -1.0 0 0))))
+     (gl:vertex 0.5 0 0))))
 
 
 (defun render-rock (rock)
@@ -457,7 +458,7 @@ Rotate the axes so that the x-axis is aligned with the object"
            (* tstep 360)))))
 
 
-(defun rotation-spread (offset spread)
+(defun spread (offset spread)
   "Randomize a value withing the range (offset-spread,offset+spread]"
   (+ offset
      (if (zerop spread)
@@ -466,17 +467,31 @@ Rotate the axes so that the x-axis is aligned with the object"
             (/ spread 2)))))
 
 
-(defun object-projectile (object &optional
-                                   (class 'projectile)
-                                   (rotation (object-rotation object))
-                                   (speed *projectile-velocity*))
-  "Create a projectile emanating from object, with an angular spread and an angular offset"
+(defun object-projectile (object)
+  "Create a projectile emanating from object"
   ;; Generate a random new rotation
-  (make-instance class
+  (make-instance 'projectile
+                 :position (object-position object)
+                 :rotation (object-rotation object)
+                 :heading (vector-scale *projectile-velocity*
+                                        (vector-unit (object-rotation object)))))
+
+
+(defun object-particle (object rotation &optional color)
+  "Create a particle emanating from object"
+  ;; Generate a random new rotation
+  (let ((p (make-instance 'particle
                  :position (object-position object)
                  :rotation rotation
-                 :heading (vector-scale speed
-                                        (vector-unit rotation))))
+                 :heading (vector-scale (* *particle-speed* (spread 1.0 0.5))
+                                        (vector-unit rotation)))))
+    (when color
+      (setf (object-color p) color))
+    
+    (setf (object-lifetime p)
+          0.5)
+
+    p))
 
 
 (defun warp-object (object top-left bottom-right)
@@ -564,12 +579,10 @@ Rotate the axes so that the x-axis is aligned with the object"
       
       (when thrusting
         (thrust-ship ship tstep)
-        (loop repeat (* tstep 10) do
-             (let ((p (object-projectile ship 'particle
-                                         (rotation-spread (+ 180 (object-rotation ship))
-                                                          15)
-                                         (/ *projectile-velocity* 2))))
-               (setf (object-lifetime p) 0.5)
+        (loop repeat 1 do
+             (let* ((rot (spread (+ 180 (object-rotation ship)) 20))
+                    (p (object-particle ship rot)))
+               
                (push p particles))))
       
       (when (and shooting (null projectile))
@@ -614,9 +627,15 @@ Rotate the axes so that the x-axis is aligned with the object"
             nil))))
 
 
+(defun particle-spray (object n &optional color)
+  "Create a sprat of particles around object"
+  (loop repeat n collect
+       (object-particle object (spread 0 180) color)))
+
+
 (defun projectile-rock-collisions (game)
   "Handle ship collisions, if any"
-  (with-slots (rocks projectile) game
+  (with-slots (rocks projectile particles) game
     (when projectile
       
       (let ((rock (find-if (lambda (rock)
@@ -624,7 +643,10 @@ Rotate the axes so that the x-axis is aligned with the object"
                            rocks)))
         (when rock
           (setf projectile nil)
-          (setf rocks (append (split-rock rock) (remove rock rocks))))))))
+          (setf rocks (append (split-rock rock) (remove rock rocks)))
+          (setf particles
+                (append (particle-spray rock 10 (list 0.7 0.5 0.5))
+                        particles)))))))
 
 
 (defun collision-detect (game)
@@ -670,5 +692,6 @@ Rotate the axes so that the x-axis is aligned with the object"
 
 (quote (progn
          (setf (object-alive-p (asteroids-ship *current-game*)) t)
+         (setf (asteroids-particles *current-game*) nil)
          (setf (object-heading (asteroids-ship *current-game*)) (list 0 0))
          (setf (object-position (asteroids-ship *current-game*)) (list 0 0))))

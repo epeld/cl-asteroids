@@ -3,7 +3,7 @@
 ![Screenshot](screenie.png "Screenshot")
 
   
-This is an asteroids clone developmed using `cl-opengl`.
+This is an asteroids clone developed using `cl-opengl`, complete with particles and everything!
 
 For now, just running `(ql:quickload :cl-game)` should be enough to get going.
 

@@ -50,12 +50,32 @@
   (report-event window (make-event :tick)))
 
 
+;;
+;; Screenshots
+;; 
+(defun get-pixels (window)
+  (with-ignore-restart
+    (let* ((width (glut:width window))
+           (height (glut:height window))
+           (data (gl:read-pixels 0 0 width height :rgb :unsigned-byte)))
+
+      (zpng:write-png
+       (make-instance 'zpng:png
+                      :color-type :truecolor
+                      :width width
+                      :height height
+                      :image-data
+                      (make-array (length data) :element-type '(unsigned-byte 8)
+                                  :initial-contents data))
+       "test.png"))))
 
 ;; 
 ;; Event Callbacks
 
 ;; TODO define event classes
 (defmethod glut:keyboard ((w base-window) key x y)
+  (when (eq key #\k)
+    (get-pixels w))
   (report-event w (make-event :keydown key x y)))
 
 

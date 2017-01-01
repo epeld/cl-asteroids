@@ -1,4 +1,7 @@
 # Hello #
+
+![Screenshot](screenie.png "Screenshot")
+
   
 This is an asteroids clone developmed using `cl-opengl`.
 

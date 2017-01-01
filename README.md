@@ -9,8 +9,6 @@ Then, to start the game, go to asteroids.lisp and run `(game-loop)`.
 # Current TODOs #
 
 + Add visual effect (= "exhaust") when thrusting
-+ Collision detect the ship as well
-+ Specialize update-object to do different things
 + Figure out units of length
 
 # Less Important TODOs #

@@ -591,14 +591,16 @@ Rotate the axes so that the x-axis is aligned with the object"
 (defun game-loop (&key (game (new-game)))
   "Enter a game loop running the specified game"
   (setf *current-game* game)
-  (window:event-loop :title "Asteroids"
-                     :event-callback (lambda (event)
-                                       (notify-event game event))
-                     :renderer (lambda ()
-                                 (update-game game 0.020)
-                                 (render-game game)
-                                 (swank::process-requests t))
-                     :tick-interval 20))
+  (unwind-protect
+       (window:event-loop :title "Asteroids"
+                          :event-callback (lambda (event)
+                                            (notify-event game event))
+                          :renderer (lambda ()
+                                      (update-game game 0.020)
+                                      (render-game game)
+                                      (swank::process-requests t))
+                          :tick-interval 20)
+    (setf *current-game* nil)))
 
 
 ;; TODO move rendering into asteroid-rendering.lisp
@@ -608,6 +610,6 @@ Rotate the axes so that the x-axis is aligned with the object"
 (quote (ql:quickload :cl-game))
 
 (quote (progn
-         (setf (object-alive-p (asteroids-ship *current-game*)) t))
-       (setf (object-heading (asteroids-ship *current-game*)) (list 0 0))
-       (setf (object-position (asteroids-ship *current-game*)) (list 0 0)))
+         (setf (object-alive-p (asteroids-ship *current-game*)) t)
+         (setf (object-heading (asteroids-ship *current-game*)) (list 0 0))
+         (setf (object-position (asteroids-ship *current-game*)) (list 0 0))))

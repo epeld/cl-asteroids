@@ -207,6 +207,11 @@
                :initform nil
                :documentation "The one live projectile instance")
 
+   (particles :type list
+              :accessor asteroids-particles
+              :initform nil
+              :documentation "Visual Effects")
+
    (rocks :type list
           :accessor asteroids-rocks
           :initform nil

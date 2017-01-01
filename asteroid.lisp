@@ -95,6 +95,9 @@
 (defparameter *ship-thrust-acceleration*
   1.0)
 
+(defparameter *rock-minimum-split-scale*
+  0.05)
+
 
 (defclass physical-object ()
   ((position :type list
@@ -121,7 +124,10 @@
             :accessor object-heading
             :initform (vector-zero)
             :initarg :heading
-            :documentation "The object's heading"))
+            :documentation "The object's heading")
+   (warps :accessor object-warps-p
+          :initform t
+          :documentation "Flag indicating if this object will warp when reaching screen edges"))
   (:documentation "Represents something in the game with physical properties"))
 
 
@@ -146,6 +152,11 @@
              :initarg :lifetime
              :documentation "The object's lifetime, in time units"))
   (:documentation "The projectile that the ship can fire"))
+
+(defmethod initialize-instance :after ((projectile projectile) &rest args)
+  (declare (ignore args))
+  (setf (object-warps-p projectile)
+        nil))
 
 
 (defclass player ()
@@ -412,19 +423,36 @@ Rotate the axes so that the x-axis is aligned with the object"
                      top-left bottom-right)))
 
 
-;; TODO rename into 'update-object' or something
-(defun update-position (object tstep)
-  "Update a game object's position using its heading"
+(defun update-rotation (object tstep)
+  "Ingerate an object's rotation"
   (incf (object-rotation object)
         (* tstep
-           (object-rotation-speed object)))
+           (object-rotation-speed object))))
 
-  ;; TODO don't warp projectiles
+
+(defun update-position (object tstep)
+  "Update a game object's position using its heading"
   (setf (object-position object)
-        (vector-warp (vector-add (object-position object)
-                                 (vector-scale tstep (object-heading object)))
-                     (list -1.05 -1.05)
-                     (list 1.05 1.05))))
+        (vector-add (object-position object)
+                    (vector-scale tstep (object-heading object)))))
+
+
+(defgeneric update-object (object tstep)
+  (:documentation "Update an object"))
+
+
+(defmethod update-object ((object physical-object) tstep)
+  (update-rotation object tstep)
+  (update-position object tstep)
+  
+  (when (object-warps-p object)
+    (warp-object object
+                 (list -1.05 -1.05)
+                 (list 1.05 1.05))))
+
+
+(defmethod update-object :after ((object projectile) tstep)
+  (spend-lifetime object tstep))
 
 
 (defun check-collision (object1 object2)
@@ -447,68 +475,80 @@ Rotate the axes so that the x-axis is aligned with the object"
 (defun split-rock (rock)
   "Split a rock into two"
   (with-slots (position heading scale) rock
-    (flet ((make-rock ()
-             (make-instance 'rock
-                            :position position
-                            :heading (vector-scale (vector-norm heading)
-                                                   (vector-unit (random 360)))
-                            :rotation 0
-                            :scale (* scale (+ 0.7
-                                               (random 0.3)))
-                            :num-vertices (+ 7
-                                             (* 2 (random 2)))
-                            :rotation-speed (- (random 360)
-                                               180))))
+    (when (> scale *rock-minimum-split-scale*)
+      (flet ((make-rock ()
+               (make-instance 'rock
+                              :position position
+                              :heading (vector-scale (vector-norm heading)
+                                                     (vector-unit (random 360)))
+                              :rotation 0
+                              :scale (* scale (+ 0.7
+                                                 (random 0.3)))
+                              :num-vertices (+ 7
+                                               (* 2 (random 2)))
+                              :rotation-speed (- (random 360)
+                                                 180))))
     
-      (list (make-rock) (make-rock)))))
+        (list (make-rock) (make-rock))))))
 
 
-(defun update-game (game tstep)
-  "Step the game forward `tstep` units of time"
-  (with-slots (ship projectile player rocks) game
-
-    ;;
-    ;; Player
-    ;; 
+(defun control-ship (game tstep)
+  "Apply player actions to ship"
+  (with-slots (ship projectile player) game
+    
     (with-slots (turning thrusting shooting) player
       (when turning (turn-ship ship tstep turning))
       (when thrusting (thrust-ship ship tstep))
       (when (and shooting (null projectile))
-        (setf projectile (ship-projectile ship))))
+        (setf projectile (ship-projectile ship))))))
 
-    ;;
-    ;; Ship
-    ;; 
-    (update-position ship tstep)
 
-    ;;
-    ;; Projectile
-    ;; 
+(defun update-objects (game tstep)
+  "Update all the game's objects"
+  (with-slots (ship projectile rocks) game
+
+    (update-object ship tstep)
+    (loop for rock in rocks do (update-object rock tstep))
     (when projectile
-      (update-position projectile tstep)
+      (update-object projectile tstep)
+      (when (zerop (object-lifetime projectile))
+        (setf projectile nil)))))
 
-      (when (zerop (spend-lifetime projectile tstep))
-        (setf projectile nil)))
 
-    ;;
-    ;; Rocks
-    ;;
-    (let (new-rocks old-rocks)
-      (setf old-rocks
-            (loop for rock in rocks
-               do
-                 (update-position rock tstep)
-               if
-                 (and projectile
-                              (check-collision projectile rock))
-               do
-                 (setf projectile nil)
-                 (when (> (object-scale rock) 0.05)
-                   (setf new-rocks (split-rock rock)))
-               else
-               collect rock))
+(defun ship-collisions (game)
+  "Handle ship collisions, if any"
+  (with-slots (ship rocks) game
+    (when (some (lambda (rock)
+                  (check-collision ship rock))
+                rocks)
+      (format t "Game Over!~%"))))
+
+
+(defun projectile-rock-collisions (game)
+  "Handle ship collisions, if any"
+  (with-slots (rocks projectile) game
+    (when projectile
       
-      (setf rocks (append new-rocks old-rocks)))))
+      (let ((rock (find-if (lambda (rock)
+                             (check-collision projectile rock))
+                           rocks)))
+        (when rock
+          (setf projectile nil)
+          (setf rocks (append (split-rock rock) (remove rock rocks))))))))
+
+
+(defun collision-detect (game)
+  "Find all relevant collisions in game"
+  (ship-collisions game)
+  (projectile-rock-collisions game))
+
+
+
+(defun update-game (game tstep)
+  "Step the game forward `tstep` units of time"
+  (control-ship game tstep)
+  (update-objects game tstep)
+  (collision-detect game))
 
 ;;
 ;;  Top Level API

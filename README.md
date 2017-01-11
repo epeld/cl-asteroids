@@ -10,7 +10,7 @@ For now, just running `(ql:quickload :cl-game)` should be enough to get going.
 Then, to start the game, go to asteroids.lisp and run `(game-loop)`.
 
 # Current TODOs #
-+ Create a Menu System
++ Create a Menu System e.g for restarting, pausing(?)
 + Score Keeping
 
 # Less Important TODOs #
